@@ -1,0 +1,1464 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#2f6fed" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
+  <title>Multiplikation (Adaptiv + Progress + Graf)</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --border:#e6eaf2;
+      --shadow: 0 10px 30px rgba(15,23,42,.08);
+      --radius:16px;
+      --primary:#2f6fed;
+      --primary-weak:#eef2ff;
+      --danger:#dc2626;
+      --danger-weak:#fee2e2;
+    }
+    *{ box-sizing:border-box; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; background:var(--bg); color:var(--text); -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+    .wrap { max-width: 980px; margin: 0 auto; padding: 18px; }
+
+    /* Top app shell */
+    .appHeader{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:12px; }
+    .appTitle{ font-size:18px; font-weight:750; margin:0; letter-spacing:.2px; }
+    .tabs{ display:flex; gap:8px; background:rgba(255,255,255,.65); border:1px solid var(--border); border-radius:999px; padding:4px; backdrop-filter: blur(6px); }
+    .tabBtn{ border:0; background:transparent; padding:8px 12px; border-radius:999px; font-size:14px; cursor:pointer; color:var(--muted); }
+    .tabBtn[aria-selected="true"]{ background:var(--card); color:var(--text); box-shadow: 0 2px 10px rgba(15,23,42,.08); }
+
+    .card { background:var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); border:1px solid var(--border); }
+    h1, h2 { margin: 0 0 10px; }
+    h2{ font-size:16px; }
+
+    /* Layout */
+    .grid { display:grid; grid-template-columns: 1fr; gap: 12px; }
+    .section{ display:none; }
+    .section.active{ display:block; }
+
+    .row { display:flex; gap: 10px; flex-wrap: wrap; }
+    label { font-size: 12px; color:var(--muted); display:block; margin-bottom:6px; }
+    input[type="number"], select, input[type="text"] { width: 100%; padding: 10px 12px; border:1px solid var(--border); border-radius: 12px; font-size: 15px; background:#fff; }
+    .field { flex:1; min-width: 160px; }
+    .field.compact { min-width: 200px; }
+    /* Wide fields (used for checkbox panels) should span the row and avoid cramped grids */
+.field.wide { flex: 1 1 100%; min-width: 320px; }
+@media (max-width: 700px){ .field.wide { min-width: 0; } }
+    .detailsCompact{ margin-top:10px; }
+    .detailsCompact[hidden]{ display:none !important; }
+
+    .btnRow{ display:flex; gap:10px; flex-wrap:wrap; margin-top:12px; align-items:center; justify-content:space-between; }
+    .btnGroup{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
+    button {
+      padding: 10px 14px;
+      border: 1px solid transparent;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 650;
+      letter-spacing: .1px;
+      cursor:pointer;
+      transition: transform .06s ease, box-shadow .16s ease, background-color .16s ease, border-color .16s ease, color .16s ease;
+      box-shadow: 0 1px 0 rgba(15,23,42,.05);
+    }
+    button:hover{ box-shadow: 0 10px 22px rgba(15,23,42,.10); }
+    button:active{ transform: translateY(1px); box-shadow: 0 3px 10px rgba(15,23,42,.10); }
+    button:focus{ outline:none; }
+    button:focus-visible{ box-shadow: 0 0 0 4px rgba(47,111,237,.18), 0 10px 22px rgba(15,23,42,.10); }
+    button:disabled{ opacity:.55; cursor:not-allowed; box-shadow:none; transform:none; }
+
+    .primary { background:var(--primary); color:#fff; }
+    .primary:hover{ background:#275fe0; }
+
+    .ghost { background:#fff; color:var(--text); border-color:var(--border); }
+    .ghost:hover{ background:#f8fafc; }
+
+    .danger { background:#fff; color:var(--danger); border-color:rgba(220,38,38,.35); }
+    .danger:hover{ background:rgba(220,38,38,.06); border-color:rgba(220,38,38,.55); }
+
+    .linkBtn{ background:transparent; border-color:transparent; color:var(--muted); font-weight:650; box-shadow:none; padding:10px 8px; }
+    .linkBtn:hover{ background:rgba(15,23,42,.04); box-shadow:none; }
+    .linkBtn:active{ transform:none; }
+
+    .q { font-size: 42px; font-weight: 750; text-align:center; margin: 16px 0 8px; letter-spacing: .5px; }
+
+    .meta { display:flex; justify-content:center; gap:14px; flex-wrap:wrap; font-size: 13px; color:var(--muted); align-items:center; padding: 10px; border:1px solid var(--border); border-radius: 14px; background: #fbfcff; }
+    .meta b { color:var(--text); }
+    .pill { display:inline-flex; align-items:center; gap:6px; padding: 4px 10px; border-radius:999px; background:#f1f5f9; font-size: 12px; color:var(--muted); border:1px solid var(--border); }
+
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding: 2px 8px; border-radius:999px; font-size: 12px; border:1px solid var(--border); background:#f8fafc; color:var(--muted); }
+    .badge.bad{ background:rgba(220,38,38,.08); border-color:rgba(220,38,38,.25); color:#b91c1c; }
+    .badge.slow{ background:rgba(234,179,8,.12); border-color:rgba(234,179,8,.25); color:#92400e; }
+    .badge.ok{ background:rgba(15,118,110,.10); border-color:rgba(15,118,110,.20); color:#0f766e; }
+    .badgeRow{ display:inline-flex; gap:6px; flex-wrap:wrap; margin-left:10px; vertical-align:middle; }
+
+    .answerRow { display:flex; gap: 10px; align-items: stretch; justify-content:center; margin-top: 10px; }
+    .answerRow input { max-width: 220px; text-align:center; font-size: 20px; font-weight: 650; }
+
+    .feedback { text-align:center; margin-top: 10px; font-size: 15px; min-height: 22px; }
+    .ok { color:#0f766e; font-weight: 650; }
+    .bad { color:#b91c1c; font-weight: 650; }
+    .hint { color:var(--muted); font-size: 12px; margin-top: 8px; text-align:center; }
+    .small { font-size: 12px; color:var(--muted); }
+
+    details { margin-top: 10px; border:1px solid var(--border); border-radius: 14px; padding: 10px 12px; background:#fbfcff; overflow:hidden;}
+    details > summary { cursor:pointer; font-weight:650; color:var(--text); }
+
+    table { width:100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border-bottom: 1px solid var(--border); padding: 8px 6px; font-size: 13px; text-align:left; vertical-align: top; }
+    th { color:var(--muted); font-weight:650; }
+
+/* Multipliers / Tables grid (responsive + touch friendly) */
+.multGrid{
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  gap:8px;
+}
+@media (max-width: 700px){
+  .multGrid{ grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); }
+}
+
+.multItem{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:8px;
+  padding:10px 10px;
+  border:1px solid var(--border);
+  border-radius: 12px;
+  background:#fff;
+  font-size:14px;
+  color:var(--text);
+  user-select:none;
+  min-height: 44px; /* better tap target */
+}
+
+.multItem span{ font-weight:650; }
+
+.multItem input{
+  width:18px;
+  height:18px;
+  margin:0;
+  accent-color: var(--primary);
+  transform:none;
+}
+
+    canvas { width: 100%; height: 220px; border:1px solid var(--border); border-radius: 14px; background:#fff; }
+    .chartLegend { display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-top:8px; }
+    .right { text-align:right; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; }
+    .muted { color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="appHeader">
+      <h1 class="appTitle">Multiplikationsträning</h1>
+      <div class="tabs" role="tablist" aria-label="Vy">
+        <button class="tabBtn" id="tabPractice" role="tab" aria-selected="true" aria-controls="sectionPractice" type="button">Öva</button>
+        <button class="tabBtn" id="tabProgress" role="tab" aria-selected="false" aria-controls="sectionProgress" type="button">Progress</button>
+      </div>
+    </div>
+    <div class="grid">
+      <!-- PRACTICE -->
+      <section class="section active" id="sectionPractice" role="tabpanel" aria-labelledby="tabPractice">
+        <div class="card">
+          <div class="row" style="margin-top:4px;">
+            <div class="field compact">
+              <label>Tabeller</label>
+              <select id="tablesSet">
+                <option value="3-10" selected>3–10 (rekommenderat)</option>
+                <option value="1-10">1–10</option>
+                <option value="6-10">6–10 (svårt fokus)</option>
+                <option value="custom">Eget val…</option>
+              </select>
+            </div>
+
+            <div class="field wide">
+              <details id="tablesCustomDetails" class="detailsCompact" hidden>
+                <summary>Anpassa tabeller</summary>
+                <div id="tablesCustomSet" style="margin-top:10px;"></div>
+                <div class="small muted" style="margin-top:6px;">Välj vilka tabeller (1–12) som ska ingå.</div>
+              </details>
+            </div>
+
+            <div class="field compact">
+              <label>Multiplicera med</label>
+
+              <select id="multPreset">
+                <option value="no12510" selected>Utan 1, 2, 5, 10 (rekommenderat)</option>
+                <option value="focus">Fokus (6–9)</option>
+                <option value="all">Alla (1–12)</option>
+                <option value="custom">Eget val…</option>
+              </select>
+
+              <details id="multCustomDetails" class="detailsCompact" hidden>
+                <summary>Anpassa eget val</summary>
+                <div id="multSet" style="margin-top:10px;"></div>
+                <div class="small muted" style="margin-top:6px;">Välj vilka tal som ska ingå.</div>
+              </details>
+            </div>
+
+            <div class="field" style="min-width: 240px;">
+              <label>Tidsgräns per fråga</label>
+              <div class="toggle" style="border:1px solid var(--border); border-radius:12px; padding:10px 12px; background:#fff; display:flex; gap:10px; align-items:center;">
+                <input id="timerOn" type="checkbox">
+                <span class="small">Aktivera</span>
+                <span style="margin-left:auto;"></span>
+                <select id="seconds" style="width:110px;">
+                  <option>6</option>
+                  <option selected>8</option>
+                  <option>10</option>
+                  <option>15</option>
+                </select>
+                <span class="small">s</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Passlängd</label>
+              <select id="sessionLen">
+                <option value="0">Oändligt</option>
+                <option value="20" selected>20 frågor</option>
+                <option value="30">30 frågor</option>
+                <option value="40">40 frågor</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="btnRow">
+            <div class="btnGroup">
+              <button id="startBtn" class="primary" type="button">Starta pass</button>
+              <button id="resetBtn" class="ghost" type="button">Avsluta &amp; spara</button>
+            </div>
+            <div class="btnGroup">
+              <button id="showAnsBtn" class="linkBtn" type="button">Visa svar</button>
+            </div>
+          </div>
+
+          <div class="q" id="question">Tryck Starta</div>
+
+          <div class="meta">
+            <div>Poäng: <b id="score">0</b></div>
+            <div>Streak: <b id="streak">0</b></div>
+            <div>Fråga: <b id="count">0</b></div>
+            <div id="timerBox" style="display:none;">Tid kvar: <b id="timeLeft">0</b>s</div>
+            <div class="pill" id="pickedInfo" style="display:none;"></div>
+          </div>
+
+          <div class="answerRow">
+            <input id="answer" type="number" inputmode="numeric" placeholder="Svar" disabled />
+            <button id="checkBtn" class="primary" disabled type="button">OK</button>
+          </div>
+
+          <div class="feedback" id="feedback"></div>
+          <div class="hint">Enter = OK. Resultat och historik sparas lokalt.</div>
+
+          <details>
+            <summary>Avancerat: Vikter per tabell</summary>
+            <table>
+              <thead>
+                <tr><th>Tabell</th><th>Vikt</th><th>Rätt</th><th>Fel</th></tr>
+              </thead>
+              <tbody id="weightsTable"></tbody>
+            </table>
+          </details>
+        </div>
+      </section>
+
+      <!-- PROGRESS -->
+      <section class="section" id="sectionProgress" role="tabpanel" aria-labelledby="tabProgress">
+        <div class="card">
+          <h2>Progression</h2>
+          <div class="btnRow" style="margin-top:0;">
+            <div class="btnGroup">
+              <button id="exportBtn" class="ghost" type="button">Exportera CSV</button>
+            </div>
+            <div class="btnGroup">
+              <button id="clearBtn" class="danger" type="button">Rensa historik</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;">
+            <label>Graf: % rätt per session (senaste 30)</label>
+            <canvas id="chart" width="900" height="260"></canvas>
+            <div class="chartLegend small muted">
+              <div id="chartInfoLeft"></div>
+              <div id="chartInfoRight"></div>
+            </div>
+          </div>
+
+          <details open>
+            <summary>Senaste sessioner</summary>
+            <table>
+              <thead>
+                <tr>
+                  <th>Datum</th><th class="right">Poäng</th><th class="right">%</th><th class="right">Tid</th><th>Multiplicera med</th>
+                </tr>
+              </thead>
+              <tbody id="sessionsTable"></tbody>
+            </table>
+          </details>
+
+          <details>
+            <summary>Summa per tabell</summary>
+            <table>
+              <thead>
+                <tr><th>Tabell</th><th class="right">Rätt</th><th class="right">Fel</th><th class="right">%</th><th class="right">Snittid</th></tr>
+              </thead>
+              <tbody id="aggTable"></tbody>
+            </table>
+            <div class="small muted">Summeringen bygger på sparade sessioner.</div>
+          </details>
+
+          <details>
+            <summary>Svåra kombinationer</summary>
+            <div class="small muted">Sorterat efter felprocent och snittid (högst först). Indikatorer: <span class="badge bad">Hög fel%</span> <span class="badge slow">Lång tid</span></div>
+            <table>
+              <thead>
+                <tr><th>Kombination</th><th class="right">Antal</th><th class="right">% rätt</th><th class="right">Fel</th><th class="right">Snittid</th></tr>
+              </thead>
+              <tbody id="comboTable"></tbody>
+            </table>
+          </details>
+
+          <div class="small" style="margin-top:10px;">
+            Data sparas i webbläsaren på denna enhet. Använd CSV-export för backup/flytt.
+          </div>
+        </div>
+      </section>
+    </div>
+
+<script>
+(() => {
+  "use strict";
+
+  const el = (id) => document.getElementById(id);
+
+  // -------------------------
+  // Settings / UI references
+  // -------------------------
+  const tablesSet = el("tablesSet");
+
+  // NOTE: The HTML must contain these (as per earlier guidance):
+  // <details id="tablesCustomDetails" ...><div id="tablesCustomSet"></div></details>
+  const tablesCustomDetails = el("tablesCustomDetails");
+  const tablesCustomSetBox = el("tablesCustomSet");
+
+  const multSetBox = el("multSet");
+  const multPresetSel = el("multPreset");
+  const multCustomDetails = el("multCustomDetails");
+
+  const timerOn = el("timerOn");
+  const secondsSel = el("seconds");
+  const timerBox = el("timerBox");
+  const timeLeft = el("timeLeft");
+  const sessionLenSel = el("sessionLen");
+
+  // Controls
+  const startBtn = el("startBtn");
+  const resetBtn = el("resetBtn");
+  const showAnsBtn = el("showAnsBtn");
+  const exportBtn = el("exportBtn");
+  const clearBtn = el("clearBtn");
+
+  // Practice UI
+  const questionEl = el("question");
+  const answerEl = el("answer");
+  const checkBtn = el("checkBtn");
+  const feedbackEl = el("feedback");
+  const scoreEl = el("score");
+  const streakEl = el("streak");
+  const countEl = el("count");
+  const pickedInfo = el("pickedInfo");
+  const weightsTbody = el("weightsTable");
+
+  // Progress UI
+  const sessionsTbody = el("sessionsTable");
+  const aggTbody = el("aggTable");
+  const comboTbody = el("comboTable");
+  const chartCanvas = el("chart");
+  const chartInfoLeft = el("chartInfoLeft");
+  const chartInfoRight = el("chartInfoRight");
+
+  // Tabs
+  const tabPractice = el("tabPractice");
+  const tabProgress = el("tabProgress");
+  const sectionPractice = el("sectionPractice");
+  const sectionProgress = el("sectionProgress");
+
+  function setActiveTab(which) {
+    const practice = which === "practice";
+    tabPractice.setAttribute("aria-selected", practice ? "true" : "false");
+    tabProgress.setAttribute("aria-selected", practice ? "false" : "true");
+    sectionPractice.classList.toggle("active", practice);
+    sectionProgress.classList.toggle("active", !practice);
+    if (!practice) renderProgress();
+  }
+
+  tabPractice.addEventListener("click", () => setActiveTab("practice"));
+  tabProgress.addEventListener("click", () => setActiveTab("progress"));
+
+  // -------------------------
+  // Storage keys
+  // -------------------------
+  const STORAGE_KEY = "mt_sessions_v3"; // bump for new schema
+  const MULT_KEY = "mt_multset_v1";
+  const MULT_PRESET_KEY = "mt_multpreset_v1";
+  const TABLES_KEY = "mt_tableset_custom_v1";
+
+  // -------------------------
+  // State
+  // -------------------------
+  let a = null, b = null, correct = null;
+  let score = 0, streak = 0, count = 0;
+  let running = false;
+
+  // Adaptive
+  let tables = [];
+  let weights = {};
+  let stats = {}; // per session
+
+  // Timing
+  let t = null;
+  let remaining = 0;
+  let sessionStartMs = null;
+
+  // Question timing + repeat prevention
+  let lastQKey = null;        // commutative key: min(a,b)xmax(a,b)
+  let questionStartMs = null; // when question was shown (total time)
+  let attemptStartMs = null;  // when the current attempt started
+  let attempts = [];          // {a,b,ok,timeMs,timeout}
+
+  // Second-chance logic (one retry per question)
+  let retriesUsed = 0;
+  let hadMistakeThisQuestion = false;
+
+  // Custom sets
+  let multSet = new Set();         // multipliers when preset=custom
+  let tablesSetCustom = new Set(); // tables when tablesSet=custom
+
+  // -------------------------
+  // Helpers
+  // -------------------------
+  function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+  function nowIso() { return new Date().toISOString(); }
+
+  function fmtDate(iso) {
+    const d = new Date(iso);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}`;
+  }
+
+  function fmtDuration(sec) {
+    sec = Math.max(0, Math.round(sec));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m > 0 ? `${m}m ${String(s).padStart(2, "0")}s` : `${s}s`;
+  }
+
+  function multSetToCompactString(setArr) {
+    const arr = setArr.slice().sort((x, y) => x - y);
+    if (!arr.length) return "-";
+    const ranges = [];
+    let start = arr[0], prev = arr[0];
+    for (let i = 1; i < arr.length; i++) {
+      const n = arr[i];
+      if (n === prev + 1) { prev = n; continue; }
+      ranges.push([start, prev]);
+      start = prev = n;
+    }
+    ranges.push([start, prev]);
+    return ranges.map(([s, e]) => s === e ? String(s) : `${s}–${e}`).join(",");
+  }
+
+  function feedback(ok, msg) {
+    feedbackEl.textContent = msg;
+    feedbackEl.className = "feedback " + (ok ? "ok" : "bad");
+  }
+
+  function pick(arr) {
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function weightedPick(tablesArr, weightsObj) {
+    const total = tablesArr.reduce((s, tab) => s + (weightsObj[tab] || 1), 0);
+    let r = Math.random() * total;
+    for (const tab of tablesArr) {
+      r -= (weightsObj[tab] || 1);
+      if (r <= 0) return tab;
+    }
+    return tablesArr[tablesArr.length - 1];
+  }
+
+  // -------------------------
+  // Storage (sessions)
+  // -------------------------
+  function loadSessions() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      const arr = raw ? JSON.parse(raw) : [];
+      return Array.isArray(arr) ? arr : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function saveSessions(arr) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(arr));
+  }
+
+  // Storage (multipliers)
+  function loadMultSet() {
+    try {
+      const raw = localStorage.getItem(MULT_KEY);
+      if (!raw) return null;
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return null;
+      const s = new Set(arr.map(Number).filter(Number.isFinite));
+      return s.size ? s : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveMultSet() {
+    localStorage.setItem(MULT_KEY, JSON.stringify([...multSet].sort((x, y) => x - y)));
+  }
+
+  function loadMultPreset() {
+    try {
+      const v = localStorage.getItem(MULT_PRESET_KEY);
+      return v || null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveMultPreset(v) {
+    localStorage.setItem(MULT_PRESET_KEY, v);
+  }
+
+  // Storage (tables custom)
+  function loadTablesSet() {
+    try {
+      const raw = localStorage.getItem(TABLES_KEY);
+      if (!raw) return null;
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return null;
+      const s = new Set(arr.map(Number).filter(Number.isFinite));
+      return s.size ? s : null;
+    } catch {
+      return null;
+    }
+  }
+
+  function saveTablesSet() {
+    localStorage.setItem(TABLES_KEY, JSON.stringify([...tablesSetCustom].sort((x, y) => x - y)));
+  }
+
+  // -------------------------
+  // Tables / Multipliers parsing
+  // -------------------------
+  function parseTables() {
+    const mode = tablesSet.value;
+    if (mode === "3-10") return [3, 4, 5, 6, 7, 8, 9, 10];
+    if (mode === "1-10") return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+    if (mode === "6-10") return [6, 7, 8, 9, 10];
+
+    // custom
+    const arr = [...tablesSetCustom].filter(Number.isFinite).sort((x, y) => x - y);
+    return arr.length ? arr : [3, 4, 6, 7, 8, 9, 10];
+  }
+
+  function getMultipliersArray() {
+    const preset = multPresetSel ? multPresetSel.value : "no12510";
+
+    if (preset === "all") return [1,2,3,4,5,6,7,8,9,10,11,12];
+    if (preset === "focus") return [6,7,8,9];
+    if (preset === "no12510") return [3,4,6,7,8,9,11,12];
+
+    // custom
+    const arr = [...multSet].filter(Number.isFinite).sort((x, y) => x - y);
+    return arr.length ? arr : [3,4,6,7,8,9];
+  }
+
+  // -------------------------
+  // Adaptive state init
+  // -------------------------
+  function initAdaptiveState() {
+    tables = parseTables();
+
+    weights = {};
+    stats = {};
+    for (const tab of tables) {
+      let w = 3;
+      if (tab === 1 || tab === 2 || tab === 5) w = 1;
+      else if (tab === 3 || tab === 4 || tab === 10) w = 2;
+      else if (tab === 6 || tab === 7 || tab === 8 || tab === 9) w = 4;
+      weights[tab] = w;
+      stats[tab] = { ok: 0, bad: 0 };
+    }
+    renderWeights();
+  }
+
+  function renderWeights() {
+    weightsTbody.innerHTML = "";
+    const sorted = [...tables].sort((x, y) => x - y);
+    for (const tab of sorted) {
+      const tr = document.createElement("tr");
+      const w = weights[tab] ?? 1;
+      const s = stats[tab] ?? { ok: 0, bad: 0 };
+      tr.innerHTML = `<td>${tab}:ans tabell</td><td><b>${w.toFixed(1)}</b></td><td>${s.ok}</td><td>${s.bad}</td>`;
+      weightsTbody.appendChild(tr);
+    }
+  }
+
+  function snapshotStats() {
+    const snap = {};
+    for (const tab of tables) snap[tab] = { ok: stats[tab].ok, bad: stats[tab].bad };
+    return snap;
+  }
+
+  function snapshotWeights() {
+    const snap = {};
+    for (const tab of tables) snap[tab] = Number((weights[tab] ?? 1).toFixed(2));
+    return snap;
+  }
+
+  function snapshotTimePerTable() {
+    const snap = {};
+    for (const tab of tables) snap[tab] = { n: 0, totalTimeMs: 0, avgMs: 0 };
+
+    for (const att of attempts) {
+      const tab = Number(att.a);
+      if (!Number.isFinite(tab) || !snap[tab]) continue;
+      snap[tab].n += 1;
+      snap[tab].totalTimeMs += Math.max(0, Number(att.timeMs) || 0);
+    }
+
+    for (const [tab, v] of Object.entries(snap)) {
+      v.avgMs = v.n > 0 ? Math.round(v.totalTimeMs / v.n) : 0;
+    }
+    return snap;
+  }
+
+  // -------------------------
+  // Timer
+  // -------------------------
+  function stopTimer() {
+    if (t) clearInterval(t);
+    t = null;
+    timerBox.style.display = "none";
+  }
+
+  function startTimer() {
+    stopTimer();
+    if (!timerOn.checked) return;
+    remaining = parseInt(secondsSel.value, 10);
+    timeLeft.textContent = String(remaining);
+    timerBox.style.display = "block";
+
+    t = setInterval(() => {
+      remaining -= 1;
+      timeLeft.textContent = String(remaining);
+      if (remaining <= 0) {
+        clearInterval(t);
+        t = null;
+
+        const used = attemptStartMs ? (Date.now() - attemptStartMs) : (parseInt(secondsSel.value, 10) * 1000);
+
+        // Timeout counts as a wrong attempt, but give one extra chance before moving on.
+        recordAttempt(false, true, used);
+        applyAdaptiveForAttempt(false, true);
+        hadMistakeThisQuestion = true;
+        retriesUsed = Math.min(1, retriesUsed + 1);
+
+        streak = 0;
+        streakEl.textContent = String(streak);
+
+        if (retriesUsed <= 1 && retriesUsed === 1) {
+          feedback(false, `Tiden tog slut. Försök igen!`);
+          answerEl.value = "";
+          answerEl.focus();
+          attemptStartMs = Date.now();
+          startTimer();
+          return;
+        }
+
+        // If we ever extend retries beyond 1, keep this safe fallback.
+        finalizeQuestion(false, `Tiden tog slut. Rätt svar: ${correct}`);
+      }
+    }, 1000);
+  }
+
+  // -------------------------
+  // Session persistence
+  // -------------------------
+  function endSessionAndPersist() {
+    if (count <= 0) return;
+
+    const endMs = Date.now();
+    const durSec = sessionStartMs ? (endMs - sessionStartMs) / 1000 : 0;
+    const pct = count > 0 ? Math.round((score / count) * 100) : 0;
+
+    const multArr = getMultipliersArray();
+    const tablesArr = parseTables();
+
+    const session = {
+      id: (crypto && crypto.randomUUID) ? crypto.randomUUID() : String(Date.now()),
+      ts: nowIso(),
+      settings: {
+        tablesSet: tablesSet.value,
+        tablesCustom: tablesArr, // store effective table list
+        multipliersPreset: (multPresetSel ? multPresetSel.value : "no12510"),
+        multipliers: multArr,
+        timerOn: !!timerOn.checked,
+        seconds: parseInt(secondsSel.value, 10),
+        sessionLen: parseInt(sessionLenSel.value, 10),
+      },
+      result: {
+        questions: count,
+        score: score,
+        percent: pct,
+        durationSec: durSec
+      },
+      perTable: snapshotStats(),
+      weightsEnd: snapshotWeights(),
+      timePerTable: snapshotTimePerTable(),
+      attempts: attempts.slice()
+    };
+
+    const all = loadSessions();
+    all.unshift(session);
+    saveSessions(all.slice(0, 200));
+  }
+
+  // -------------------------
+  // Question flow
+  // -------------------------
+  function nextQuestion() {
+    if (!running) return;
+
+    const maxQ = parseInt(sessionLenSel.value, 10);
+    if (maxQ > 0 && count >= maxQ) {
+      running = false;
+      stopTimer();
+
+      endSessionAndPersist();
+      renderProgress();
+
+      questionEl.textContent = "Pass klart!";
+      answerEl.disabled = true;
+      checkBtn.disabled = true;
+      pickedInfo.style.display = "none";
+      const pct = count > 0 ? Math.round((score / count) * 100) : 0;
+      feedback(true, `Klart. Poäng: ${score}/${count} (${pct}%).`);
+      return;
+    }
+
+    const multipliers = getMultipliersArray();
+
+    // Prevent same multiplication twice in a row (commutative)
+    let tries = 0;
+    while (true) {
+      const aa = weightedPick(tables, weights);
+      const bb = pick(multipliers);
+      const key = `${Math.min(aa, bb)}x${Math.max(aa, bb)}`;
+      if (key !== lastQKey || tries >= 25) {
+        a = aa;
+        b = bb;
+        lastQKey = key;
+        break;
+      }
+      tries += 1;
+    }
+
+    correct = a * b;
+    questionStartMs = Date.now();
+    retriesUsed = 0;
+    hadMistakeThisQuestion = false;
+    attemptStartMs = questionStartMs;
+
+    questionEl.textContent = `${a} × ${b} = ?`;
+    answerEl.value = "";
+    feedbackEl.textContent = "";
+    feedbackEl.className = "feedback";
+    answerEl.focus();
+
+    pickedInfo.style.display = "inline-block";
+    pickedInfo.textContent = `Fokus: ${a}:ans tabell (vikt ${weights[a].toFixed(1)})`;
+
+    startTimer();
+  }
+
+  function recordAttempt(isCorrect, isTimeout, timeMs) {
+    attempts.push({
+      a,
+      b,
+      ok: !!isCorrect,
+      timeout: !!isTimeout,
+      timeMs: Math.max(0, Math.round(Number(timeMs) || 0))
+    });
+  }
+
+  function applyAdaptiveForAttempt(isCorrect, isTimeout) {
+    if (isCorrect) {
+      stats[a].ok += 1;
+      weights[a] = Math.max(0.8, (weights[a] || 1) - 0.25);
+    } else {
+      stats[a].bad += 1;
+      weights[a] = Math.min(10, (weights[a] || 1) + (isTimeout ? 1.25 : 1.0));
+    }
+    renderWeights();
+  }
+
+  function finalizeQuestion(isCorrect, message) {
+    // A question is only counted once, after final outcome.
+    count += 1;
+    countEl.textContent = String(count);
+
+    if (isCorrect) {
+      score += 1;
+      scoreEl.textContent = String(score);
+
+      // Streak is broken if there was any mistake on this question.
+      if (!hadMistakeThisQuestion) {
+        streak += 1;
+      } else {
+        streak = 0;
+      }
+      streakEl.textContent = String(streak);
+
+      feedback(true, message || "Rätt!");
+      setTimeout(nextQuestion, 450);
+      return;
+    }
+
+    // Wrong final outcome
+    streak = 0;
+    streakEl.textContent = String(streak);
+
+    feedback(false, message || `Fel. Rätt svar: ${correct}`);
+    setTimeout(nextQuestion, 700);
+  }
+
+  function check() {
+    if (!running) return;
+    stopTimer();
+
+    const val = Number(answerEl.value);
+    const ok = Number.isFinite(val) && val === correct;
+
+    const used = attemptStartMs ? (Date.now() - attemptStartMs) : 0;
+
+    if (ok) {
+      recordAttempt(true, false, used);
+      applyAdaptiveForAttempt(true, false);
+      finalizeQuestion(true, "Rätt!");
+      return;
+    }
+
+    // Wrong attempt – log it, adapt weights, and give one retry.
+    recordAttempt(false, false, used);
+    applyAdaptiveForAttempt(false, false);
+    hadMistakeThisQuestion = true;
+
+    // Any mistake breaks streak immediately (even if you later get it right).
+    streak = 0;
+    streakEl.textContent = String(streak);
+
+    if (retriesUsed < 1) {
+      retriesUsed += 1;
+      feedback(false, "Inte riktigt. Försök igen!");
+      answerEl.value = "";
+      answerEl.focus();
+      attemptStartMs = Date.now();
+      startTimer();
+      return;
+    }
+
+    // Second miss: finalize and move on.
+    finalizeQuestion(false, `Fel. Rätt svar: ${correct}`);
+  }
+
+  function showAnswer() {
+    if (!running || correct === null) return;
+    stopTimer();
+
+    const used = attemptStartMs ? (Date.now() - attemptStartMs) : 0;
+
+    // Showing answer counts as a wrong attempt and immediately finalizes the question.
+    recordAttempt(false, false, used);
+    applyAdaptiveForAttempt(false, false);
+    hadMistakeThisQuestion = true;
+    retriesUsed = 1;
+
+    streak = 0;
+    streakEl.textContent = String(streak);
+
+    finalizeQuestion(false, `Svaret är ${correct}`);
+  }
+
+  function start() {
+    if (getMultipliersArray().length === 0) {
+      alert("Välj minst en multiplikator (t.ex. 3–9).");
+      return;
+    }
+    if (parseTables().length === 0) {
+      alert("Välj minst en tabell (t.ex. 3–10).");
+      return;
+    }
+
+    running = true;
+
+    score = 0;
+    streak = 0;
+    count = 0;
+
+    lastQKey = null;
+    questionStartMs = null;
+    attempts = [];
+    attemptStartMs = null;
+    retriesUsed = 0;
+    hadMistakeThisQuestion = false;
+
+    scoreEl.textContent = "0";
+    streakEl.textContent = "0";
+    countEl.textContent = "0";
+
+    answerEl.disabled = false;
+    checkBtn.disabled = false;
+
+    sessionStartMs = Date.now();
+
+    initAdaptiveState();
+    nextQuestion();
+  }
+
+  function reset() {
+    // If resetting mid-session: save what exists
+    if (running) {
+      stopTimer();
+      running = false;
+      endSessionAndPersist();
+      renderProgress();
+    }
+
+    a = null; b = null; correct = null;
+
+    score = 0; streak = 0; count = 0;
+    lastQKey = null;
+    questionStartMs = null;
+    attempts = [];
+    attemptStartMs = null;
+    retriesUsed = 0;
+    hadMistakeThisQuestion = false;
+
+    scoreEl.textContent = "0";
+    streakEl.textContent = "0";
+    countEl.textContent = "0";
+
+    questionEl.textContent = "Tryck Starta";
+    answerEl.value = "";
+    answerEl.disabled = true;
+    checkBtn.disabled = true;
+
+    feedbackEl.textContent = "";
+    feedbackEl.className = "feedback";
+    pickedInfo.style.display = "none";
+
+    tables = [];
+    weights = {};
+    stats = {};
+    weightsTbody.innerHTML = "";
+
+    sessionStartMs = null;
+  }
+
+  // -------------------------
+  // Tables UI (custom checkboxes)
+  // -------------------------
+  function buildTablesUI() {
+    if (!tablesCustomSetBox) return;
+    tablesCustomSetBox.innerHTML = "";
+
+    const saved = loadTablesSet();
+    if (saved) tablesSetCustom = saved;
+    else tablesSetCustom = new Set([3,4,6,7,8,9,10]);
+
+    const grid = document.createElement("div");
+    grid.className = "multGrid";
+
+    const nums = [1,2,3,4,5,6,7,8,9,10,11,12];
+    for (const n of nums) {
+      const label = document.createElement("label");
+      label.className = "multItem";
+      const checked = tablesSetCustom.has(n);
+      label.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""} data-n="${n}"> <span>${n}</span>`;
+      grid.appendChild(label);
+    }
+    tablesCustomSetBox.appendChild(grid);
+
+    tablesCustomSetBox.addEventListener("change", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const n = Number(target.getAttribute("data-n"));
+      if (!Number.isFinite(n)) return;
+
+      if (target.checked) tablesSetCustom.add(n);
+      else tablesSetCustom.delete(n);
+
+      saveTablesSet();
+    });
+
+    function applyTablesUI() {
+      const custom = (tablesSet.value === "custom");
+      if (!tablesCustomDetails) return;
+
+      if (custom) {
+        tablesCustomDetails.hidden = false;
+        tablesCustomDetails.setAttribute("open", "");
+      } else {
+        tablesCustomDetails.hidden = true;
+        tablesCustomDetails.removeAttribute("open");
+      }
+    }
+
+    applyTablesUI();
+    tablesSet.addEventListener("change", applyTablesUI);
+  }
+
+  function updateModeUI() {
+    const custom = (tablesSet.value === "custom");
+    if (tablesCustomDetails) {
+      if (custom) {
+        tablesCustomDetails.hidden = false;
+      } else {
+        tablesCustomDetails.hidden = true;
+        tablesCustomDetails.removeAttribute("open");
+      }
+    }
+  }
+
+  // -------------------------
+  // Multipliers UI (custom checkboxes)
+  // -------------------------
+  function buildMultiplierUI() {
+    if (!multSetBox) return;
+
+    multSetBox.innerHTML = "";
+
+    // Restore preset (default: no12510)
+    const savedPreset = loadMultPreset();
+    const preset = savedPreset || "no12510";
+    if (multPresetSel) multPresetSel.value = preset;
+
+    // Restore custom set (only used when preset=custom)
+    const saved = loadMultSet();
+    if (saved) multSet = saved;
+    else multSet = new Set([3,4,6,7,8,9,11,12]);
+
+    const grid = document.createElement("div");
+    grid.className = "multGrid";
+
+    const nums = [1,2,3,4,5,6,7,8,9,10,11,12];
+    for (const n of nums) {
+      const label = document.createElement("label");
+      label.className = "multItem";
+      const checked = multSet.has(n);
+      label.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""} data-n="${n}"> <span>${n}</span>`;
+      grid.appendChild(label);
+    }
+    multSetBox.appendChild(grid);
+
+    function syncGridChecks() {
+      const inputs = multSetBox.querySelectorAll('input[type="checkbox"][data-n]');
+      inputs.forEach(inp => {
+        const n = Number(inp.getAttribute("data-n"));
+        inp.checked = multSet.has(n);
+      });
+    }
+
+    multSetBox.addEventListener("change", (e) => {
+      const target = e.target;
+      if (!(target instanceof HTMLInputElement)) return;
+      const n = Number(target.getAttribute("data-n"));
+      if (!Number.isFinite(n)) return;
+
+      if (target.checked) multSet.add(n);
+      else multSet.delete(n);
+
+      saveMultSet();
+    });
+
+    function applyPresetUI() {
+      const p = multPresetSel ? multPresetSel.value : "no12510";
+      const custom = p === "custom";
+      if (multCustomDetails) {
+        if (custom) {
+          multCustomDetails.hidden = false;
+          multCustomDetails.setAttribute("open", "");
+          syncGridChecks();
+        } else {
+          multCustomDetails.hidden = true;
+          multCustomDetails.removeAttribute("open");
+        }
+      }
+    }
+
+    applyPresetUI();
+
+    if (multPresetSel) {
+      multPresetSel.addEventListener("change", () => {
+        saveMultPreset(multPresetSel.value);
+        applyPresetUI();
+      });
+    }
+  }
+
+  // -------------------------
+  // Progress rendering
+  // -------------------------
+  function renderProgress() {
+    const sessions = loadSessions();
+
+    // Sessions table
+    sessionsTbody.innerHTML = "";
+    for (const s of sessions.slice(0, 30)) {
+      const tr = document.createElement("tr");
+      const pct = s.result?.percent ?? 0;
+      const dur = fmtDuration(s.result?.durationSec ?? 0);
+      const multTxt = multSetToCompactString((s.settings?.multipliers || []).map(Number).filter(Number.isFinite));
+
+      tr.innerHTML = `
+        <td class="mono">${fmtDate(s.ts)}</td>
+        <td class="right mono">${s.result.score}/${s.result.questions}</td>
+        <td class="right mono">${pct}%</td>
+        <td class="right mono">${dur}</td>
+        <td>${multTxt}</td>
+      `;
+      sessionsTbody.appendChild(tr);
+    }
+    if (sessions.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" class="muted">Inga sparade sessioner ännu.</td>`;
+      sessionsTbody.appendChild(tr);
+    }
+
+    // Aggregate per table (accuracy + time)
+    const agg = {};
+    for (const s of sessions) {
+      const per = s.perTable || {};
+      for (const [tab, v] of Object.entries(per)) {
+        if (!agg[tab]) agg[tab] = { ok: 0, bad: 0, n: 0, totalTimeMs: 0 };
+        agg[tab].ok += (v.ok || 0);
+        agg[tab].bad += (v.bad || 0);
+      }
+
+      const tpt = s.timePerTable || {};
+      for (const [tab, v] of Object.entries(tpt)) {
+        if (!agg[tab]) agg[tab] = { ok: 0, bad: 0, n: 0, totalTimeMs: 0 };
+        agg[tab].n += (v.n || 0);
+        agg[tab].totalTimeMs += (v.totalTimeMs || 0);
+      }
+    }
+
+    const rows = Object.keys(agg).map(k => Number(k)).filter(Number.isFinite).sort((x, y) => x - y);
+    aggTbody.innerHTML = "";
+    if (rows.length === 0) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td colspan="5" class="muted">Ingen data att summera ännu.</td>`;
+      aggTbody.appendChild(tr);
+    } else {
+      for (const tab of rows) {
+        const v = agg[String(tab)];
+        const total = (v.ok || 0) + (v.bad || 0);
+        const pct = total > 0 ? Math.round(((v.ok || 0) / total) * 100) : 0;
+        const avgSec = (v.n || 0) > 0 ? (v.totalTimeMs / v.n / 1000) : 0;
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${tab}:ans tabell</td>
+          <td class="right mono">${v.ok || 0}</td>
+          <td class="right mono">${v.bad || 0}</td>
+          <td class="right mono">${pct}%</td>
+          <td class="right mono">${(v.n || 0) > 0 ? avgSec.toFixed(1) + "s" : "-"}</td>
+        `;
+        aggTbody.appendChild(tr);
+      }
+    }
+
+    // Difficult combinations (based on attempts)
+    if (comboTbody) {
+      const comboMap = new Map();
+
+      for (const s of sessions) {
+        const atts = Array.isArray(s.attempts) ? s.attempts : [];
+        for (const att of atts) {
+          const aa = Number(att.a);
+          const bb = Number(att.b);
+          if (!Number.isFinite(aa) || !Number.isFinite(bb)) continue;
+
+          const lo = Math.min(aa, bb);
+          const hi = Math.max(aa, bb);
+          const key = `${lo}x${hi}`;
+
+          if (!comboMap.has(key)) {
+            comboMap.set(key, { lo, hi, n: 0, ok: 0, bad: 0, totalTimeMs: 0 });
+          }
+          const row = comboMap.get(key);
+          row.n += 1;
+          row.totalTimeMs += Math.max(0, Number(att.timeMs) || 0);
+          if (att.ok) row.ok += 1;
+          else row.bad += 1;
+        }
+      }
+
+      comboTbody.innerHTML = "";
+      const comboRows = [...comboMap.values()];
+
+      if (comboRows.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="5" class="muted">Ingen data ännu. Kör ett par pass så fylls detta på.</td>`;
+        comboTbody.appendChild(tr);
+      } else {
+        comboRows.sort((x, y) => {
+          const xb = x.bad / x.n;
+          const yb = y.bad / y.n;
+          if (yb !== xb) return yb - xb; // error rate first
+          const xt = x.totalTimeMs / x.n;
+          const yt = y.totalTimeMs / y.n;
+          if (yt !== xt) return yt - xt; // then avg time
+          return y.n - x.n;
+        });
+
+        const top = comboRows.slice(0, 15);
+        for (const r of top) {
+          const pctOk = r.n > 0 ? Math.round((r.ok / r.n) * 100) : 0;
+          const avgSec = r.n > 0 ? (r.totalTimeMs / r.n / 1000) : 0;
+          const errRate = r.n > 0 ? (r.bad / r.n) : 0;
+
+          const badges = [];
+          if (r.n >= 3 && errRate >= 0.40) badges.push('<span class="badge bad">Hög fel%</span>');
+          if (r.n >= 3 && avgSec >= 5.0) badges.push('<span class="badge slow">Lång tid</span>');
+          if (r.n >= 5 && pctOk >= 90 && avgSec <= 2.5) badges.push('<span class="badge ok">Sitter</span>');
+          const badgeHtml = badges.length ? `<span class="badgeRow">${badges.join("")}</span>` : "";
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td class="mono">${r.lo} × ${r.hi}${badgeHtml}</td>
+            <td class="right mono">${r.n}</td>
+            <td class="right mono">${pctOk}%</td>
+            <td class="right mono">${r.bad}</td>
+            <td class="right mono">${avgSec.toFixed(1)}s</td>
+          `;
+          comboTbody.appendChild(tr);
+        }
+      }
+    }
+
+    drawChart(sessions.slice(0, 30).slice().reverse());
+  }
+
+  function drawChart(sessionsOldToNew) {
+    if (!chartCanvas) return;
+    const ctx = chartCanvas.getContext("2d");
+
+    const cssW = chartCanvas.clientWidth || 600;
+    const cssH = chartCanvas.clientHeight || 220;
+    const dpr = window.devicePixelRatio || 1;
+    chartCanvas.width = Math.floor(cssW * dpr);
+    chartCanvas.height = Math.floor(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    ctx.clearRect(0, 0, cssW, cssH);
+
+    const padL = 44, padR = 14, padT = 14, padB = 28;
+    const w = cssW - padL - padR;
+    const h = cssH - padT - padB;
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, cssW, cssH);
+
+    ctx.strokeStyle = "#edf0f7";
+    ctx.lineWidth = 1;
+    for (let y = 0; y <= 5; y++) {
+      const yy = padT + (h * y / 5);
+      ctx.beginPath();
+      ctx.moveTo(padL, yy);
+      ctx.lineTo(padL + w, yy);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = "#6b7280";
+    ctx.font = "12px system-ui, -apple-system, Segoe UI, Roboto, Arial";
+    ctx.textAlign = "right";
+    ctx.textBaseline = "middle";
+    for (let i = 0; i <= 5; i++) {
+      const val = 100 - i * 20;
+      const yy = padT + (h * i / 5);
+      ctx.fillText(String(val), padL - 8, yy);
+    }
+
+    ctx.strokeStyle = "#d7dbe7";
+    ctx.beginPath();
+    ctx.moveTo(padL, padT + h);
+    ctx.lineTo(padL + w, padT + h);
+    ctx.stroke();
+
+    if (!sessionsOldToNew.length) {
+      if (chartInfoLeft) chartInfoLeft.textContent = "Ingen data ännu.";
+      if (chartInfoRight) chartInfoRight.textContent = "";
+      return;
+    }
+
+    const pts = sessionsOldToNew.map((s, idx) => {
+      const pct = clamp(Number(s.result?.percent ?? 0), 0, 100);
+      const x = padL + (sessionsOldToNew.length === 1 ? w / 2 : (w * idx / (sessionsOldToNew.length - 1)));
+      const y = padT + (h * (1 - pct / 100));
+      return { x, y, pct, ts: s.ts };
+    });
+
+    ctx.strokeStyle = "#2f6fed";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.stroke();
+
+    ctx.fillStyle = "#2f6fed";
+    for (const p of pts) {
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    const pcts = pts.map(p => p.pct);
+    const min = Math.min(...pcts);
+    const max = Math.max(...pcts);
+    const last = pcts[pcts.length - 1];
+    if (chartInfoLeft) chartInfoLeft.textContent = `Min: ${min}%  Max: ${max}%  Senaste: ${last}%`;
+    if (chartInfoRight) chartInfoRight.textContent = `Visar ${pts.length} session(er)`;
+  }
+
+  // -------------------------
+  // CSV export / clear
+  // -------------------------
+  function exportCsv() {
+    const sessions = loadSessions();
+    if (sessions.length === 0) {
+      alert("Ingen historik att exportera ännu.");
+      return;
+    }
+
+    const header = [
+      "timestamp",
+      "questions",
+      "score",
+      "percent",
+      "duration_sec",
+      "tables_set",
+      "tables_effective",
+      "multipliers_preset",
+      "multipliers",
+      "timer_on",
+      "seconds",
+      "session_len",
+      "per_table_json",
+      "time_per_table_json"
+    ];
+
+    const lines = [header.join(",")];
+
+    for (const s of sessions.slice().reverse()) {
+      const mult = (s.settings?.multipliers || []).join(" ");
+      const tablesEff = (s.settings?.tablesCustom || []).join(" ");
+      const row = [
+        s.ts,
+        s.result?.questions ?? 0,
+        s.result?.score ?? 0,
+        s.result?.percent ?? 0,
+        Math.round(s.result?.durationSec || 0),
+        s.settings?.tablesSet ?? "",
+        tablesEff,
+        s.settings?.multipliersPreset ?? "",
+        mult,
+        s.settings?.timerOn ? "true" : "false",
+        s.settings?.seconds ?? "",
+        s.settings?.sessionLen ?? "",
+        JSON.stringify(s.perTable || {}).replaceAll('"', '""'),
+        JSON.stringify(s.timePerTable || {}).replaceAll('"', '""')
+      ];
+
+      lines.push(row.map(x => `"${String(x)}"`).join(","));
+    }
+
+    const csv = lines.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "multiplikation_sessioner.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function clearHistory() {
+    const ok = confirm("Vill du rensa all sparad historik på den här enheten?");
+    if (!ok) return;
+    localStorage.removeItem(STORAGE_KEY);
+    renderProgress();
+  }
+
+  // -------------------------
+  // Events + init
+  // -------------------------
+  startBtn.addEventListener("click", start);
+  resetBtn.addEventListener("click", reset);
+  checkBtn.addEventListener("click", check);
+  showAnsBtn.addEventListener("click", showAnswer);
+  answerEl.addEventListener("keydown", (e) => { if (e.key === "Enter") check(); });
+
+  exportBtn.addEventListener("click", exportCsv);
+  clearBtn.addEventListener("click", clearHistory);
+
+  window.addEventListener("resize", () => renderProgress());
+
+  // Keyboard shortcuts for navigation
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "1") setActiveTab("practice");
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "2") setActiveTab("progress");
+  });
+
+  // Init
+  buildTablesUI();
+  buildMultiplierUI();
+  updateModeUI();
+  renderProgress();
+  reset();
+  setActiveTab("practice");
+})();
+</script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
