@@ -101,6 +101,10 @@
 
     .answerRow { display:flex; gap: 10px; align-items: stretch; justify-content:center; margin-top: 10px; }
     .answerRow input { max-width: 220px; text-align:center; font-size: 20px; font-weight: 650; }
+    @media (max-width: 700px){
+      #checkBtn { display: none; }
+      .answerRow input { max-width: 100%; }
+    }
 
     .feedback { text-align:center; margin-top: 10px; font-size: 15px; min-height: 22px; }
     .ok { color:#0f766e; font-weight: 650; }
@@ -222,6 +226,14 @@
               </div>
             </div>
 
+            <div class="field" style="min-width: 220px;">
+              <label>Auto-OK</label>
+              <div class="toggle" style="border:1px solid var(--border); border-radius:12px; padding:10px 12px; background:#fff; display:flex; gap:10px; align-items:center;">
+                <input id="autoOk" type="checkbox" checked>
+                <span class="small">Skicka direkt vid ratt svar</span>
+              </div>
+            </div>
+
             <div class="field">
               <label>Passlängd</label>
               <select id="sessionLen">
@@ -254,7 +266,7 @@
           </div>
 
           <div class="answerRow">
-            <input id="answer" type="number" inputmode="numeric" placeholder="Svar" disabled />
+            <input id="answer" type="number" inputmode="numeric" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Svar" disabled />
             <button id="checkBtn" class="primary" disabled type="button">OK</button>
           </div>
 
@@ -361,6 +373,7 @@
   const timerBox = el("timerBox");
   const timeLeft = el("timeLeft");
   const sessionLenSel = el("sessionLen");
+  const autoOk = el("autoOk");
 
   // Controls
   const startBtn = el("startBtn");
@@ -393,6 +406,16 @@
   const tabProgress = el("tabProgress");
   const sectionPractice = el("sectionPractice");
   const sectionProgress = el("sectionProgress");
+  const practiceCard = sectionPractice ? sectionPractice.querySelector(".card") : null;
+
+  function focusAnswer(preventScroll = true) {
+    if (!answerEl || answerEl.disabled) return;
+    try {
+      answerEl.focus({ preventScroll });
+    } catch {
+      answerEl.focus();
+    }
+  }
 
   function setActiveTab(which) {
     const practice = which === "practice";
@@ -413,6 +436,7 @@
   const MULT_KEY = "mt_multset_v1";
   const MULT_PRESET_KEY = "mt_multpreset_v1";
   const TABLES_KEY = "mt_tableset_custom_v1";
+  const AUTO_OK_KEY = "mt_autook_v1";
 
   // -------------------------
   // State
@@ -568,6 +592,23 @@
     localStorage.setItem(TABLES_KEY, JSON.stringify([...tablesSetCustom].sort((x, y) => x - y)));
   }
 
+  function loadAutoOk() {
+    try {
+      const raw = localStorage.getItem(AUTO_OK_KEY);
+      if (raw === null) {
+        const isMobile = window.matchMedia && window.matchMedia("(max-width: 700px)").matches;
+        return !!isMobile;
+      }
+      return raw === "true";
+    } catch {
+      return false;
+    }
+  }
+
+  function saveAutoOk(v) {
+    localStorage.setItem(AUTO_OK_KEY, v ? "true" : "false");
+  }
+
   // -------------------------
   // Tables / Multipliers parsing
   // -------------------------
@@ -691,7 +732,7 @@
         if (retriesUsed <= 1 && retriesUsed === 1) {
           feedback(false, `Tiden tog slut. Försök igen!`);
           answerEl.value = "";
-          answerEl.focus();
+          focusAnswer();
           attemptStartMs = Date.now();
           startTimer();
           return;
@@ -795,7 +836,7 @@
     answerEl.value = "";
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";
-    answerEl.focus();
+    focusAnswer();
 
     pickedInfo.style.display = "inline-block";
     pickedInfo.textContent = `Fokus: ${a}:ans tabell (vikt ${weights[a].toFixed(1)})`;
@@ -883,7 +924,7 @@
       retriesUsed += 1;
       feedback(false, "Inte riktigt. Försök igen!");
       answerEl.value = "";
-      answerEl.focus();
+      focusAnswer();
       attemptStartMs = Date.now();
       startTimer();
       return;
@@ -1432,6 +1473,15 @@
   checkBtn.addEventListener("click", check);
   showAnsBtn.addEventListener("click", showAnswer);
   answerEl.addEventListener("keydown", (e) => { if (e.key === "Enter") check(); });
+  answerEl.addEventListener("input", () => {
+    if (!running) return;
+    if (autoOk && !autoOk.checked) return;
+    const val = Number(answerEl.value);
+    if (Number.isFinite(val) && val === correct) check();
+  });
+  if (practiceCard) {
+    practiceCard.addEventListener("pointerdown", () => focusAnswer());
+  }
 
   exportBtn.addEventListener("click", exportCsv);
   clearBtn.addEventListener("click", clearHistory);
@@ -1447,6 +1497,10 @@
   // Init
   buildTablesUI();
   buildMultiplierUI();
+  if (autoOk) {
+    autoOk.checked = loadAutoOk();
+    autoOk.addEventListener("change", () => saveAutoOk(autoOk.checked));
+  }
   updateModeUI();
   renderProgress();
   reset();
