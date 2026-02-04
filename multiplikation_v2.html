@@ -33,6 +33,7 @@
     .tabs{ display:flex; gap:8px; background:rgba(255,255,255,.65); border:1px solid var(--border); border-radius:999px; padding:4px; backdrop-filter: blur(6px); }
     .tabBtn{ border:0; background:transparent; padding:8px 12px; border-radius:999px; font-size:14px; cursor:pointer; color:var(--muted); }
     .tabBtn[aria-selected="true"]{ background:var(--card); color:var(--text); box-shadow: 0 2px 10px rgba(15,23,42,.08); }
+    .versionTag{ font-size:12px; color:var(--muted); background:#fff; border:1px solid var(--border); border-radius:999px; padding:4px 8px; }
 
     .card { background:var(--card); border-radius: var(--radius); padding: 16px; box-shadow: var(--shadow); border:1px solid var(--border); }
     h1, h2 { margin: 0 0 10px; }
@@ -165,9 +166,12 @@
   <div class="wrap">
     <div class="appHeader">
       <h1 class="appTitle">Multiplikationsträning</h1>
-      <div class="tabs" role="tablist" aria-label="Vy">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="versionTag" id="versionTag">v2026-02-04</span>
+        <div class="tabs" role="tablist" aria-label="Vy">
         <button class="tabBtn" id="tabPractice" role="tab" aria-selected="true" aria-controls="sectionPractice" type="button">Öva</button>
         <button class="tabBtn" id="tabProgress" role="tab" aria-selected="false" aria-controls="sectionProgress" type="button">Progress</button>
+        </div>
       </div>
     </div>
     <div class="grid">
