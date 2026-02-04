@@ -1,4 +1,4 @@
-const CACHE_NAME = "multiplikation-v2-pwa-v1";
+const CACHE_NAME = "multiplikation-v2-pwa-v2";
 const ASSETS = [
   "./multiplikation_v2.html",
   "./manifest.json",
