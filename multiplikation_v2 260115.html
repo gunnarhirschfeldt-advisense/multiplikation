@@ -3,11 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#2f6fed" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <title>Multiplikation (Adaptiv + Progress + Graf)</title>
   <style>
     :root{
@@ -254,7 +249,7 @@
           </div>
 
           <div class="answerRow">
-            <input id="answer" type="number" inputmode="numeric" enterkeyhint="go" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Svar" disabled />
+            <input id="answer" type="number" inputmode="numeric" placeholder="Svar" disabled />
             <button id="checkBtn" class="primary" disabled type="button">OK</button>
           </div>
 
@@ -486,15 +481,6 @@
   function feedback(ok, msg) {
     feedbackEl.textContent = msg;
     feedbackEl.className = "feedback " + (ok ? "ok" : "bad");
-  }
-
-  function keepAnswerFocus() {
-    if (!running) return;
-    if (answerEl.disabled) return;
-    // Defer to allow Safari to keep the keyboard open between questions.
-    setTimeout(() => {
-      if (running && !answerEl.disabled) answerEl.focus();
-    }, 0);
   }
 
   function pick(arr) {
@@ -804,7 +790,7 @@
     answerEl.value = "";
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";
-    keepAnswerFocus();
+    answerEl.focus();
 
     pickedInfo.style.display = "inline-block";
     pickedInfo.textContent = `Fokus: ${a}:ans tabell (vikt ${weights[a].toFixed(1)})`;
@@ -954,7 +940,6 @@
 
     initAdaptiveState();
     nextQuestion();
-    keepAnswerFocus();
   }
 
   function reset() {
@@ -1442,11 +1427,6 @@
   checkBtn.addEventListener("click", check);
   showAnsBtn.addEventListener("click", showAnswer);
   answerEl.addEventListener("keydown", (e) => { if (e.key === "Enter") check(); });
-  answerEl.addEventListener("input", () => {
-    if (!running) return;
-    const val = Number(answerEl.value);
-    if (Number.isFinite(val) && val === correct) check();
-  });
 
   exportBtn.addEventListener("click", exportCsv);
   clearBtn.addEventListener("click", clearHistory);
@@ -1459,16 +1439,6 @@
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "2") setActiveTab("progress");
   });
 
-  // Keep focus on the answer input during a running session on touch devices.
-  document.addEventListener("touchstart", (e) => {
-    if (!running) return;
-    const t = e.target;
-    if (t === answerEl) return;
-    if (t instanceof HTMLButtonElement || t instanceof HTMLSelectElement) return;
-    if (t instanceof HTMLInputElement && t.type !== "number") return;
-    keepAnswerFocus();
-  }, { passive: true });
-
   // Init
   buildTablesUI();
   buildMultiplierUI();
@@ -1477,13 +1447,6 @@
   reset();
   setActiveTab("practice");
 })();
-</script>
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
-    });
-  }
 </script>
 </body>
 </html>

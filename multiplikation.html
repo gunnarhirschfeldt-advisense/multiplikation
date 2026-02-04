@@ -3,11 +3,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#2f6fed" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <link rel="manifest" href="./manifest.json" />
-  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />
   <title>Multiplikation (Adaptiv + Progress + Graf)</title>
   <style>
     :root{
@@ -254,7 +249,7 @@
           </div>
 
           <div class="answerRow">
-            <input id="answer" type="number" inputmode="numeric" enterkeyhint="go" autocomplete="off" autocorrect="off" spellcheck="false" placeholder="Svar" disabled />
+            <input id="answer" type="number" inputmode="numeric" placeholder="Svar" disabled />
             <button id="checkBtn" class="primary" disabled type="button">OK</button>
           </div>
 
@@ -433,13 +428,8 @@
 
   // Question timing + repeat prevention
   let lastQKey = null;        // commutative key: min(a,b)xmax(a,b)
-  let questionStartMs = null; // when question was shown (total time)
-  let attemptStartMs = null;  // when the current attempt started
-  let attempts = [];          // {a,b,ok,timeMs,timeout}
-
-  // Second-chance logic (one retry per question)
-  let retriesUsed = 0;
-  let hadMistakeThisQuestion = false;
+  let questionStartMs = null; // when current question was shown
+  let attempts = [];          // {a,b,ok,timeMs}
 
   // Custom sets
   let multSet = new Set();         // multipliers when preset=custom
@@ -486,15 +476,6 @@
   function feedback(ok, msg) {
     feedbackEl.textContent = msg;
     feedbackEl.className = "feedback " + (ok ? "ok" : "bad");
-  }
-
-  function keepAnswerFocus() {
-    if (!running) return;
-    if (answerEl.disabled) return;
-    // Defer to allow Safari to keep the keyboard open between questions.
-    setTimeout(() => {
-      if (running && !answerEl.disabled) answerEl.focus();
-    }, 0);
   }
 
   function pick(arr) {
@@ -685,29 +666,9 @@
       if (remaining <= 0) {
         clearInterval(t);
         t = null;
-
-        const used = attemptStartMs ? (Date.now() - attemptStartMs) : (parseInt(secondsSel.value, 10) * 1000);
-
-        // Timeout counts as a wrong attempt, but give one extra chance before moving on.
-        recordAttempt(false, true, used);
-        applyAdaptiveForAttempt(false, true);
-        hadMistakeThisQuestion = true;
-        retriesUsed = Math.min(1, retriesUsed + 1);
-
-        streak = 0;
-        streakEl.textContent = String(streak);
-
-        if (retriesUsed <= 1 && retriesUsed === 1) {
-          feedback(false, `Tiden tog slut. Försök igen!`);
-          answerEl.value = "";
-          answerEl.focus();
-          attemptStartMs = Date.now();
-          startTimer();
-          return;
-        }
-
-        // If we ever extend retries beyond 1, keep this safe fallback.
-        finalizeQuestion(false, `Tiden tog slut. Rätt svar: ${correct}`);
+        applyResult(false, true, questionStartMs ? (Date.now() - questionStartMs) : (parseInt(secondsSel.value, 10) * 1000));
+        feedback(false, `Tiden tog slut. Rätt svar: ${correct}`);
+        setTimeout(nextQuestion, 700);
       }
     }, 1000);
   }
@@ -796,15 +757,12 @@
 
     correct = a * b;
     questionStartMs = Date.now();
-    retriesUsed = 0;
-    hadMistakeThisQuestion = false;
-    attemptStartMs = questionStartMs;
 
     questionEl.textContent = `${a} × ${b} = ?`;
     answerEl.value = "";
     feedbackEl.textContent = "";
     feedbackEl.className = "feedback";
-    keepAnswerFocus();
+    answerEl.focus();
 
     pickedInfo.style.display = "inline-block";
     pickedInfo.textContent = `Fokus: ${a}:ans tabell (vikt ${weights[a].toFixed(1)})`;
@@ -812,55 +770,38 @@
     startTimer();
   }
 
-  function recordAttempt(isCorrect, isTimeout, timeMs) {
+  function applyResult(isCorrect, isTimeout = false, timeMs = null) {
+    const usedTimeMs = (timeMs !== null)
+      ? timeMs
+      : (questionStartMs ? (Date.now() - questionStartMs) : 0);
+
     attempts.push({
       a,
       b,
       ok: !!isCorrect,
-      timeout: !!isTimeout,
-      timeMs: Math.max(0, Math.round(Number(timeMs) || 0))
+      timeMs: Math.max(0, Math.round(usedTimeMs))
     });
-  }
 
-  function applyAdaptiveForAttempt(isCorrect, isTimeout) {
-    if (isCorrect) {
-      stats[a].ok += 1;
-      weights[a] = Math.max(0.8, (weights[a] || 1) - 0.25);
-    } else {
-      stats[a].bad += 1;
-      weights[a] = Math.min(10, (weights[a] || 1) + (isTimeout ? 1.25 : 1.0));
-    }
-    renderWeights();
-  }
-
-  function finalizeQuestion(isCorrect, message) {
-    // A question is only counted once, after final outcome.
     count += 1;
     countEl.textContent = String(count);
 
     if (isCorrect) {
       score += 1;
+      streak += 1;
       scoreEl.textContent = String(score);
-
-      // Streak is broken if there was any mistake on this question.
-      if (!hadMistakeThisQuestion) {
-        streak += 1;
-      } else {
-        streak = 0;
-      }
       streakEl.textContent = String(streak);
 
-      feedback(true, message || "Rätt!");
-      setTimeout(nextQuestion, 450);
-      return;
+      stats[a].ok += 1;
+      weights[a] = Math.max(0.8, (weights[a] || 1) - 0.25);
+    } else {
+      streak = 0;
+      streakEl.textContent = String(streak);
+
+      stats[a].bad += 1;
+      weights[a] = Math.min(10, (weights[a] || 1) + (isTimeout ? 1.25 : 1.0));
     }
 
-    // Wrong final outcome
-    streak = 0;
-    streakEl.textContent = String(streak);
-
-    feedback(false, message || `Fel. Rätt svar: ${correct}`);
-    setTimeout(nextQuestion, 700);
+    renderWeights();
   }
 
   function check() {
@@ -870,54 +811,25 @@
     const val = Number(answerEl.value);
     const ok = Number.isFinite(val) && val === correct;
 
-    const used = attemptStartMs ? (Date.now() - attemptStartMs) : 0;
+    applyResult(ok, false, questionStartMs ? (Date.now() - questionStartMs) : 0);
 
     if (ok) {
-      recordAttempt(true, false, used);
-      applyAdaptiveForAttempt(true, false);
-      finalizeQuestion(true, "Rätt!");
-      return;
+      feedback(true, "Rätt!");
+      setTimeout(nextQuestion, 450);
+    } else {
+      feedback(false, `Fel. Rätt svar: ${correct}`);
+      setTimeout(nextQuestion, 700);
     }
-
-    // Wrong attempt – log it, adapt weights, and give one retry.
-    recordAttempt(false, false, used);
-    applyAdaptiveForAttempt(false, false);
-    hadMistakeThisQuestion = true;
-
-    // Any mistake breaks streak immediately (even if you later get it right).
-    streak = 0;
-    streakEl.textContent = String(streak);
-
-    if (retriesUsed < 1) {
-      retriesUsed += 1;
-      feedback(false, "Inte riktigt. Försök igen!");
-      answerEl.value = "";
-      answerEl.focus();
-      attemptStartMs = Date.now();
-      startTimer();
-      return;
-    }
-
-    // Second miss: finalize and move on.
-    finalizeQuestion(false, `Fel. Rätt svar: ${correct}`);
   }
 
   function showAnswer() {
     if (!running || correct === null) return;
     stopTimer();
 
-    const used = attemptStartMs ? (Date.now() - attemptStartMs) : 0;
+    applyResult(false, false, questionStartMs ? (Date.now() - questionStartMs) : 0);
 
-    // Showing answer counts as a wrong attempt and immediately finalizes the question.
-    recordAttempt(false, false, used);
-    applyAdaptiveForAttempt(false, false);
-    hadMistakeThisQuestion = true;
-    retriesUsed = 1;
-
-    streak = 0;
-    streakEl.textContent = String(streak);
-
-    finalizeQuestion(false, `Svaret är ${correct}`);
+    feedback(false, `Svaret är ${correct}`);
+    setTimeout(nextQuestion, 700);
   }
 
   function start() {
@@ -939,9 +851,6 @@
     lastQKey = null;
     questionStartMs = null;
     attempts = [];
-    attemptStartMs = null;
-    retriesUsed = 0;
-    hadMistakeThisQuestion = false;
 
     scoreEl.textContent = "0";
     streakEl.textContent = "0";
@@ -954,7 +863,6 @@
 
     initAdaptiveState();
     nextQuestion();
-    keepAnswerFocus();
   }
 
   function reset() {
@@ -972,9 +880,6 @@
     lastQKey = null;
     questionStartMs = null;
     attempts = [];
-    attemptStartMs = null;
-    retriesUsed = 0;
-    hadMistakeThisQuestion = false;
 
     scoreEl.textContent = "0";
     streakEl.textContent = "0";
@@ -1442,11 +1347,6 @@
   checkBtn.addEventListener("click", check);
   showAnsBtn.addEventListener("click", showAnswer);
   answerEl.addEventListener("keydown", (e) => { if (e.key === "Enter") check(); });
-  answerEl.addEventListener("input", () => {
-    if (!running) return;
-    const val = Number(answerEl.value);
-    if (Number.isFinite(val) && val === correct) check();
-  });
 
   exportBtn.addEventListener("click", exportCsv);
   clearBtn.addEventListener("click", clearHistory);
@@ -1459,16 +1359,6 @@
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "2") setActiveTab("progress");
   });
 
-  // Keep focus on the answer input during a running session on touch devices.
-  document.addEventListener("touchstart", (e) => {
-    if (!running) return;
-    const t = e.target;
-    if (t === answerEl) return;
-    if (t instanceof HTMLButtonElement || t instanceof HTMLSelectElement) return;
-    if (t instanceof HTMLInputElement && t.type !== "number") return;
-    keepAnswerFocus();
-  }, { passive: true });
-
   // Init
   buildTablesUI();
   buildMultiplierUI();
@@ -1477,13 +1367,6 @@
   reset();
   setActiveTab("practice");
 })();
-</script>
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
-    });
-  }
 </script>
 </body>
 </html>

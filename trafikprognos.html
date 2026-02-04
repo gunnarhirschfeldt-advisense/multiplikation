@@ -1,0 +1,1038 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Trafikprognos Storstockholm</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #1d1a21;
+        --paper: #fff7fb;
+        --accent: #ff5a8f;
+        --accent-strong: #d63b72;
+        --accent-2: #2c7a7b;
+        --muted: #6b6373;
+        --panel: #ffffff;
+        --panel-2: #f8f3f7;
+        --shadow: 0 24px 50px rgba(40, 24, 52, 0.12);
+        --stroke: rgba(29, 26, 33, 0.08);
+        --glow: 0 0 0 1px rgba(255, 90, 143, 0.18),
+          0 18px 40px rgba(255, 90, 143, 0.15);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Manrope", system-ui, sans-serif;
+        color: var(--ink);
+        background: radial-gradient(1200px 800px at 0% -10%, #ffd1e3, transparent),
+          radial-gradient(900px 700px at 100% 0%, #c9f1ec, transparent),
+          radial-gradient(800px 600px at 20% 100%, #ffe9f2, transparent),
+          linear-gradient(180deg, #fff6fb, #f8edf5 50%, #fff7fb 100%);
+        min-height: 100vh;
+        overflow-x: hidden;
+      }
+
+      header {
+        padding: 56px 6vw 24px;
+        display: grid;
+        gap: 14px;
+      }
+
+      header h1 {
+        font-size: clamp(2.2rem, 4vw, 3.8rem);
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      header p {
+        margin: 0;
+        color: var(--muted);
+        max-width: 640px;
+        font-size: 1.05rem;
+      }
+
+      main {
+        padding: 0 6vw 72px;
+        display: grid;
+        gap: 26px;
+      }
+
+      .hero {
+        display: grid;
+        gap: 18px;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      }
+
+      .card {
+        background: var(--panel);
+        padding: 20px;
+        border-radius: 22px;
+        box-shadow: var(--shadow);
+        border: 1px solid var(--stroke);
+        position: relative;
+        overflow: hidden;
+        animation: rise 0.6s ease both;
+      }
+
+      .card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        background: radial-gradient(200px 120px at 85% -20%, rgba(255, 90, 143, 0.18), transparent);
+        pointer-events: none;
+      }
+
+      .card h2 {
+        margin: 0 0 8px;
+        font-size: 1.1rem;
+      }
+
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #fff;
+        color: var(--accent-strong);
+        box-shadow: var(--glow);
+        font-size: 0.95rem;
+      }
+
+      .forecast-grid {
+        display: grid;
+        gap: 16px;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      }
+
+      .forecast-day {
+        padding: 16px;
+        border-radius: 16px;
+        background: linear-gradient(160deg, #fff, #f9f1f6);
+        border: 1px solid var(--stroke);
+      }
+
+      .forecast-day h3 {
+        margin: 0 0 10px;
+        font-size: 1rem;
+      }
+
+      .status {
+        font-weight: 700;
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+
+      .status.good {
+        color: var(--accent-2);
+      }
+
+      .status.ok {
+        color: #c27500;
+      }
+
+      .status.bad {
+        color: var(--accent);
+      }
+
+      .row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .sources {
+        display: grid;
+        gap: 12px;
+      }
+
+      .sources small {
+        color: var(--muted);
+      }
+
+      .source-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        background: #fff;
+        border: 1px solid var(--stroke);
+      }
+
+      .source-item span {
+        font-weight: 600;
+      }
+
+      .source-filters {
+        display: grid;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 12px;
+        background: linear-gradient(180deg, #fff, #f7eff5);
+      }
+
+      .source-filters h3 {
+        margin: 0;
+        font-size: 1rem;
+      }
+
+      .input-row {
+        display: grid;
+        grid-template-columns: minmax(140px, 1fr) 1fr auto;
+        gap: 12px;
+        align-items: center;
+      }
+
+      input[type="text"] {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--stroke);
+        font-family: inherit;
+        background: white;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      select {
+        width: 100%;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--stroke);
+        font-family: inherit;
+        background: white;
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+      }
+
+      button {
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: none;
+        font-weight: 600;
+        background: var(--accent);
+        color: white;
+        cursor: pointer;
+        box-shadow: 0 12px 24px rgba(214, 59, 114, 0.25);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      button.secondary {
+        background: #ffe3ee;
+        color: var(--accent-strong);
+        box-shadow: none;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 16px 28px rgba(214, 59, 114, 0.3);
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .note {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      footer {
+        padding: 24px 6vw 40px;
+        color: var(--muted);
+        font-size: 0.85rem;
+      }
+
+      @media (max-width: 720px) {
+        .input-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="pill" id="route-pill">Liveprognos</div>
+      <h1>Trafikläge i Storstockholm</h1>
+      <p>
+        Den här sidan sammanställer väder från SMHI, SL och Yr.no utan
+        nycklar. Prognosen räknar fram ett trafikindex för pendling mellan
+        valda kommuner.
+      </p>
+    </header>
+
+    <main>
+      <section class="card">
+        <h2>Välj kommuner</h2>
+        <div class="input-row">
+          <label for="from-select">Från</label>
+          <select id="from-select"></select>
+          <button class="secondary" id="swap-route">Byt</button>
+        </div>
+        <div class="input-row">
+          <label for="to-select">Till</label>
+          <select id="to-select"></select>
+          <button id="update-route">Uppdatera</button>
+        </div>
+        <p class="note" id="route-note"></p>
+      </section>
+
+      <section class="hero">
+        <div class="card">
+          <h2>Dagens läge</h2>
+          <div class="status" id="today-status">Laddar…</div>
+          <div class="row" id="today-metrics"></div>
+        </div>
+        <div class="card">
+          <h2>Snabböversikt</h2>
+          <div class="row" id="summary-metrics"></div>
+          <p class="note" id="summary-note"></p>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Prognos nästa tre dygn</h2>
+        <div class="forecast-grid" id="forecast-grid"></div>
+      </section>
+
+      <section class="card sources">
+        <h2>Datakällor</h2>
+        <div class="source-item">
+          <span>SMHI (öppet)</span>
+          <small id="smhi-status">Hämtas automatiskt</small>
+        </div>
+        <div class="source-item">
+          <span>SL / Trafiklab</span>
+          <small id="sl-status">Hämtas automatiskt</small>
+        </div>
+        <div class="source-item">
+          <span>Yr.no</span>
+          <small id="yr-status">Hämtas automatiskt</small>
+        </div>
+        <div class="source-filters">
+          <h3>SL-filter</h3>
+          <div class="input-row">
+            <label for="sl-site-from">Site-id för från</label>
+            <input id="sl-site-from" type="text" placeholder="ex: 9300" />
+            <button class="secondary" id="save-sl-filters">Spara</button>
+          </div>
+          <div class="input-row">
+            <label for="sl-site-to">Site-id för till</label>
+            <input id="sl-site-to" type="text" placeholder="ex: 9001" />
+            <button class="secondary" id="reset-sl-filters">Rensa</button>
+          </div>
+          <div class="input-row">
+            <label for="sl-line-ids">Line-id (komma)</label>
+            <input id="sl-line-ids" type="text" placeholder="ex: 40, 41" />
+            <button class="secondary" disabled> </button>
+          </div>
+          <div class="input-row">
+            <label for="sl-modes">Transportläge (komma)</label>
+            <input id="sl-modes" type="text" placeholder="ex: train, metro, bus" />
+            <button class="secondary" disabled> </button>
+          </div>
+          <p class="note" id="sl-filter-note"></p>
+        </div>
+        <p class="note">
+          Yr.no-data hämtas via MET Norway Locationforecast. Om Yr.no inte kan
+          nås används endast SMHI + SL.
+        </p>
+      </section>
+    </main>
+
+    <footer>
+      Prognosen är indikativ. Trafikläget beräknas utifrån väder, rapporterade
+      störningar och uppdateras när du laddar om sidan.
+    </footer>
+
+    <script>
+      const municipalities = [
+        { name: "Botkyrka", lat: 59.1992, lon: 17.8337 },
+        { name: "Danderyd", lat: 59.4082, lon: 18.0416 },
+        { name: "Ekerö", lat: 59.2919, lon: 17.8061 },
+        { name: "Haninge", lat: 59.1678, lon: 18.1376 },
+        { name: "Huddinge", lat: 59.2371, lon: 17.9819 },
+        { name: "Järfälla", lat: 59.4231, lon: 17.8344 },
+        { name: "Lidingö", lat: 59.3667, lon: 18.1333 },
+        { name: "Nacka", lat: 59.3104, lon: 18.1634 },
+        { name: "Norrtälje", lat: 59.7574, lon: 18.7017 },
+        { name: "Nykvarn", lat: 59.1796, lon: 17.4331 },
+        { name: "Nynäshamn", lat: 58.9032, lon: 17.9466 },
+        { name: "Salem", lat: 59.2015, lon: 17.769 },
+        { name: "Sigtuna", lat: 59.6173, lon: 17.7236 },
+        { name: "Sollentuna", lat: 59.4284, lon: 17.9502 },
+        { name: "Solna", lat: 59.3609, lon: 18.0009 },
+        { name: "Stockholm", lat: 59.3293, lon: 18.0686 },
+        { name: "Södertälje", lat: 59.1955, lon: 17.625 },
+        { name: "Sundbyberg", lat: 59.3616, lon: 17.9717 },
+        { name: "Tyresö", lat: 59.2403, lon: 18.2996 },
+        { name: "Täby", lat: 59.4439, lon: 18.0687 },
+        { name: "Upplands Väsby", lat: 59.5184, lon: 17.9113 },
+        { name: "Upplands-Bro", lat: 59.5162, lon: 17.641 },
+        { name: "Vallentuna", lat: 59.5348, lon: 18.0776 },
+        { name: "Vaxholm", lat: 59.4041, lon: 18.3513 },
+        { name: "Värmdö", lat: 59.3233, lon: 18.47 },
+        { name: "Österåker", lat: 59.4819, lon: 18.2991 },
+      ];
+
+      const route = {
+        from: municipalities.find((m) => m.name === "Sollentuna"),
+        to: municipalities.find((m) => m.name === "Stockholm"),
+      };
+
+      const slFilterState = {
+        siteMap: JSON.parse(localStorage.getItem("slSiteMap") || "{}"),
+        lineIds: parseList(localStorage.getItem("slLineIds") || ""),
+        transportModes: parseList(localStorage.getItem("slTransportModes") || ""),
+      };
+
+      const ui = {
+        todayStatus: document.getElementById("today-status"),
+        todayMetrics: document.getElementById("today-metrics"),
+        summaryMetrics: document.getElementById("summary-metrics"),
+        summaryNote: document.getElementById("summary-note"),
+        forecastGrid: document.getElementById("forecast-grid"),
+        smhiStatus: document.getElementById("smhi-status"),
+        slStatus: document.getElementById("sl-status"),
+        yrStatus: document.getElementById("yr-status"),
+        fromSelect: document.getElementById("from-select"),
+        toSelect: document.getElementById("to-select"),
+        routePill: document.getElementById("route-pill"),
+        routeNote: document.getElementById("route-note"),
+        swapRoute: document.getElementById("swap-route"),
+        updateRoute: document.getElementById("update-route"),
+        slSiteFrom: document.getElementById("sl-site-from"),
+        slSiteTo: document.getElementById("sl-site-to"),
+        slLineIds: document.getElementById("sl-line-ids"),
+        slModes: document.getElementById("sl-modes"),
+        saveSlFilters: document.getElementById("save-sl-filters"),
+        resetSlFilters: document.getElementById("reset-sl-filters"),
+        slFilterNote: document.getElementById("sl-filter-note"),
+      };
+
+      const dayNames = ["Sön", "Mån", "Tis", "Ons", "Tor", "Fre", "Lör"];
+
+      function parseList(value) {
+        return value
+          .split(",")
+          .map((item) => item.trim())
+          .filter(Boolean);
+      }
+
+      function formatList(list) {
+        return list.join(", ");
+      }
+
+      function populateSelect(select, selectedName) {
+        select.textContent = "";
+        municipalities.forEach((municipality) => {
+          const option = document.createElement("option");
+          option.value = municipality.name;
+          option.textContent = municipality.name;
+          if (municipality.name === selectedName) option.selected = true;
+          select.append(option);
+        });
+      }
+
+      function setRoute(fromName, toName) {
+        const from = municipalities.find((m) => m.name === fromName);
+        const to = municipalities.find((m) => m.name === toName);
+        if (!from || !to) return;
+        route.from = from;
+        route.to = to;
+        localStorage.setItem("routeFrom", from.name);
+        localStorage.setItem("routeTo", to.name);
+        ui.routePill.textContent = `Liveprognos ${from.name} → ${to.name}`;
+        ui.routeNote.textContent = `Beräknat för pendling ${from.name} → ${to.name}.`;
+        syncSlInputs();
+      }
+
+      function escapeRegex(value) {
+        return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      }
+
+      function formatDay(date) {
+        return `${dayNames[date.getDay()]} ${date.getDate()}/${date.getMonth() + 1}`;
+      }
+
+      function statusClass(score) {
+        if (score <= 1) return "good";
+        if (score <= 3) return "ok";
+        return "bad";
+      }
+
+      function statusText(score) {
+        if (score <= 1) return "Stabilt trafikläge";
+        if (score <= 3) return "Måttligt störningsrisk";
+        return "Hög risk för störningar";
+      }
+
+      function renderToday(day) {
+        ui.todayStatus.textContent = statusText(day.score);
+        ui.todayStatus.className = `status ${statusClass(day.score)}`;
+        ui.todayMetrics.textContent = "";
+        const metrics = [
+          metric(`Temp`, `${day.temp.toFixed(1)}°C`),
+          metric(`Vind`, `${day.wind.toFixed(1)} m/s`),
+          metric(`Väder`, day.weather),
+          metric(`SL`, day.sl || "Ingen data")
+        ];
+        if (day.slCause) {
+          metrics.push(metric(`Orsak`, day.slCause));
+        }
+        ui.todayMetrics.append(...metrics);
+      }
+
+      function renderSummary(days) {
+        const avgScore = days.reduce((sum, d) => sum + d.score, 0) / days.length;
+        const worst = days.reduce((max, d) => (d.score > max.score ? d : max), days[0]);
+        ui.summaryMetrics.textContent = "";
+        ui.summaryMetrics.append(
+          metric(`Genomsnitt`, statusText(avgScore)),
+          metric(`Störst risk`, `${formatDay(worst.date)}`),
+          metric(`Datakällor`, `${countSources(days[0])} av 3`)
+        );
+        ui.summaryNote.textContent =
+          "Högre vindar, nederbörd och SL-störningar höjer trafikindexet.";
+      }
+
+      function renderForecast(days) {
+        ui.forecastGrid.textContent = "";
+        days.forEach((day) => {
+          const card = document.createElement("div");
+          card.className = "forecast-day";
+          card.innerHTML = `
+            <h3>${formatDay(day.date)}</h3>
+            <div class="status ${statusClass(day.score)}">${statusText(day.score)}</div>
+            <div class="row">
+              <span>Temp: ${day.temp.toFixed(1)}°C</span>
+              <span>Vind: ${day.wind.toFixed(1)} m/s</span>
+              <span>Väder: ${day.weather}</span>
+              <span>SL: ${day.sl || "Ingen data"}</span>
+              ${day.slCause ? `<span>Orsak: ${day.slCause}</span>` : ""}
+            </div>
+          `;
+          ui.forecastGrid.append(card);
+        });
+      }
+
+      function metric(label, value) {
+        const span = document.createElement("span");
+        span.textContent = `${label}: ${value}`;
+        return span;
+      }
+
+      function countSources(day) {
+        let count = 1;
+        if (day.slRaw) count += 1;
+        if (day.yrRaw) count += 1;
+        return count;
+      }
+
+      function calculateScore(day) {
+        let score = 0;
+        if (day.wind >= 8) score += 2;
+        if (day.wind >= 12) score += 1;
+        if (day.precip >= 2) score += 1;
+        if (day.precip >= 6) score += 1;
+        if (day.slIssues >= 2) score += 2;
+        if (day.slIssues === 1) score += 1;
+        if (day.temp <= -5) score += 1;
+        if (day.temp <= -10) score += 1;
+        return score;
+      }
+
+      async function fetchSmhiForecast() {
+        const lon = ((route.from.lon + route.to.lon) / 2).toFixed(4);
+        const lat = ((route.from.lat + route.to.lat) / 2).toFixed(4);
+        const url = `https://opendata-download-metfcst.smhi.se/api/category/pmp3g/version/2/geotype/point/lon/${lon}/lat/${lat}/data.json`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("SMHI misslyckades");
+        const data = await response.json();
+        return data.timeSeries;
+      }
+
+      function summarizeSmhi(timeSeries) {
+        const days = new Map();
+        timeSeries.forEach((entry) => {
+          const date = new Date(entry.validTime);
+          const dayKey = date.toISOString().split("T")[0];
+          if (!days.has(dayKey)) {
+            days.set(dayKey, {
+              date: new Date(dayKey),
+              temps: [],
+              winds: [],
+              precip: [],
+              weatherSymbol: null,
+            });
+          }
+          const record = days.get(dayKey);
+          const params = Object.fromEntries(
+            entry.parameters.map((p) => [p.name, p.values[0]])
+          );
+          if (typeof params.t === "number") record.temps.push(params.t);
+          if (typeof params.ws === "number") record.winds.push(params.ws);
+          if (typeof params.pmean === "number") record.precip.push(params.pmean);
+          if (params.Wsymb2) record.weatherSymbol = params.Wsymb2;
+        });
+
+        return Array.from(days.values()).slice(0, 3).map((day) => ({
+          date: day.date,
+          temp: average(day.temps),
+          wind: average(day.winds),
+          precip: average(day.precip),
+          weather: weatherSymbol(day.weatherSymbol),
+        }));
+      }
+
+      function average(list) {
+        if (!list.length) return 0;
+        return list.reduce((sum, val) => sum + val, 0) / list.length;
+      }
+
+      function weatherSymbol(symbol) {
+        const map = {
+          1: "Klart",
+          2: "Lätt moln",
+          3: "Halvklart",
+          4: "Molnigt",
+          5: "Mulet",
+          6: "Lätt regn",
+          7: "Regn",
+          8: "Åska",
+          9: "Lätt snö",
+          10: "Snö",
+          11: "Snöblandat regn",
+          12: "Regnbyar",
+          13: "Snöbyar",
+          14: "Åskbyar",
+          15: "Dimma",
+        };
+        return map[symbol] || "Okänt";
+      }
+
+      async function fetchSlDisruptions() {
+        const params = new URLSearchParams({ future: "true" });
+        const fromSite = slFilterState.siteMap[route.from.name];
+        const toSite = slFilterState.siteMap[route.to.name];
+        [fromSite, toSite].filter(Boolean).forEach((site) => params.append("site", site));
+        slFilterState.lineIds.forEach((line) => params.append("line", line));
+        slFilterState.transportModes.forEach((mode) =>
+          params.append("transport_mode", mode)
+        );
+        const url = `https://deviations.integration.sl.se/v1/messages?${params.toString()}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("SL misslyckades");
+        return response.json();
+      }
+
+      function summarizeSl(data) {
+        if (!data) return { issues: 0, text: "Ingen data" };
+        const items = Array.isArray(data) ? data : data.messages || data.ResponseData || [];
+        if (!Array.isArray(items) || !items.length) {
+          return { issues: 0, text: "Inga rapporterade störningar" };
+        }
+        const uniqueById = new Map();
+        const uniqueBySignature = new Map();
+        let hasIds = false;
+        items.forEach((item) => {
+          const id =
+            item.deviation_case_id ||
+            item.deviationCaseId ||
+            item.id ||
+            item.Id ||
+            item.message_id ||
+            item.messageId ||
+            item.deviationId ||
+            item.deviation_id;
+          if (id) {
+            hasIds = true;
+            if (!uniqueById.has(id)) uniqueById.set(id, item);
+            return;
+          }
+          const signature = slSignature(item);
+          if (!uniqueBySignature.has(signature)) {
+            uniqueBySignature.set(signature, item);
+          }
+        });
+        const uniqueItems = hasIds
+          ? Array.from(uniqueById.values())
+          : Array.from(uniqueBySignature.values());
+        const routePattern = new RegExp(
+          `${escapeRegex(route.from.name)}|${escapeRegex(route.to.name)}|pendel|Järfälla|Uppsala`,
+          "i"
+        );
+        const relevant = uniqueItems.filter((item) => {
+          const text = slMessageText(item);
+          return routePattern.test(text);
+        });
+        const pool = relevant.length ? relevant : uniqueItems;
+        const issues = pool.length;
+        const causes = summarizeSlCauses(pool);
+        return {
+          issues,
+          text: issues ? `${issues} unika störningar` : "Inga rapporterade störningar",
+          causeText: causes,
+        };
+      }
+
+      function summarizeSlCauses(items) {
+        const buckets = new Map();
+        items.forEach((item) => {
+          const explicit =
+            item.reason ||
+            item.cause ||
+            item.deviationType ||
+            item.deviation_type ||
+            item.type ||
+            item.Type;
+          let cause = explicit ? explicit.toString() : "";
+          if (!cause) {
+            const text = slMessageText(item);
+            if (/väder|snö|regn|storm|is|halka|oväder/i.test(text)) {
+              cause = "Väder";
+            } else if (/signalfel|teknik|systemfel|ström|fordonsfel|fel på fordon/i.test(text)) {
+              cause = "Teknik";
+            } else if (/olycka|incident|brand|kollision|på[k]?örning/i.test(text)) {
+              cause = "Olycka";
+            } else if (/arbete|banarbete|planerat|underhåll/i.test(text)) {
+              cause = "Planerat";
+            } else if (/framkomlighet|köer|trafikstockning/i.test(text)) {
+              cause = "Framkomlighet";
+            } else {
+              cause = "Övrigt";
+            }
+          }
+          buckets.set(cause, (buckets.get(cause) || 0) + 1);
+        });
+        if (!buckets.size) return "";
+        return Array.from(buckets.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([label, count]) => `${label} ${count}`)
+          .join(", ");
+      }
+
+      function slSignature(item) {
+        const text = slMessageText(item);
+        const line =
+          item.line ||
+          item.Line ||
+          item.lineId ||
+          item.LineNumber ||
+          item.line_number ||
+          "";
+        const site = item.site || item.Site || item.siteId || item.SiteId || "";
+        const mode =
+          item.transport_mode ||
+          item.TransportMode ||
+          item.transportMode ||
+          item.Mode ||
+          "";
+        const start =
+          item.start ||
+          item.StartDate ||
+          item.ValidFrom ||
+          item.validFrom ||
+          "";
+        const end = item.end || item.EndDate || item.ValidTo || item.validTo || "";
+        return [text, line, site, mode, start, end].map((v) => v.toString().trim()).join("|");
+      }
+
+      function slMessageText(item) {
+        const variant =
+          item.message_variants && item.message_variants.length
+            ? item.message_variants[0]
+            : null;
+        return (
+          (variant && (variant.details || variant.header || variant.scope_alias)) ||
+          item.message ||
+          item.Message ||
+          item.Description ||
+          ""
+        )
+          .toString()
+          .trim();
+      }
+
+      async function fetchYrNo() {
+        const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${route.from.lat}&lon=${route.from.lon}`;
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("Yr.no misslyckades");
+        return response.json();
+      }
+
+      function summarizeYrNo(data) {
+        if (!data || !data.properties || !data.properties.timeseries) return [];
+        const days = new Map();
+        data.properties.timeseries.forEach((entry) => {
+          const date = new Date(entry.time);
+          const dayKey = date.toISOString().split("T")[0];
+          if (!days.has(dayKey)) {
+            days.set(dayKey, {
+              date: new Date(dayKey),
+              temps: [],
+              winds: [],
+              precip: [],
+              symbol: null,
+            });
+          }
+          const record = days.get(dayKey);
+          const details = entry.data.instant.details;
+          if (typeof details.air_temperature === "number") {
+            record.temps.push(details.air_temperature);
+          }
+          if (typeof details.wind_speed === "number") {
+            record.winds.push(details.wind_speed);
+          }
+          const next =
+            entry.data.next_1_hours ||
+            entry.data.next_6_hours ||
+            entry.data.next_12_hours;
+          if (next && next.details && typeof next.details.precipitation_amount === "number") {
+            record.precip.push(next.details.precipitation_amount);
+          }
+          if (next && next.summary && next.summary.symbol_code) {
+            record.symbol = next.summary.symbol_code;
+          }
+        });
+
+        return Array.from(days.values()).slice(0, 3).map((day) => ({
+          date: day.date,
+          temp: average(day.temps),
+          wind: average(day.winds),
+          precip: average(day.precip),
+          weather: yrSymbol(day.symbol),
+        }));
+      }
+
+      function yrSymbol(symbol) {
+        if (!symbol) return "Okänt";
+        const simple = symbol.split("_")[0];
+        const map = {
+          clearsky: "Klart",
+          cloudy: "Molnigt",
+          fair: "Lätt moln",
+          fog: "Dimma",
+          heavyrain: "Kraftigt regn",
+          heavyrainshowers: "Regnbyar",
+          heavyrainshowersandthunder: "Åskbyar",
+          heavysleet: "Blötsnö",
+          heavysleetshowers: "Blötsnöbyar",
+          heavysnow: "Kraftig snö",
+          heavysnowshowers: "Snöbyar",
+          lightrain: "Lätt regn",
+          lightrainshowers: "Regnbyar",
+          lightrainshowersandthunder: "Åskbyar",
+          lightsleet: "Lätt blötsnö",
+          lightsleetshowers: "Blötsnöbyar",
+          lightsnow: "Lätt snö",
+          lightsnowshowers: "Snöbyar",
+          partlycloudy: "Halvklart",
+          rain: "Regn",
+          rainshowers: "Regnbyar",
+          rainshowersandthunder: "Åskbyar",
+          sleet: "Blötsnö",
+          sleetshowers: "Blötsnöbyar",
+          snow: "Snö",
+          snowshowers: "Snöbyar",
+          snowshowersandthunder: "Åskbyar",
+        };
+        return map[simple] || "Okänt";
+      }
+
+      async function refresh() {
+        ui.smhiStatus.textContent = "Hämtar…";
+        ui.slStatus.textContent = "Hämtar…";
+        ui.yrStatus.textContent = "Hämtar…";
+
+        try {
+          const [smhi, sl, yr] = await Promise.allSettled([
+            fetchSmhiForecast(),
+            fetchSlDisruptions(),
+            fetchYrNo(),
+          ]);
+
+          if (smhi.status === "fulfilled") {
+            ui.smhiStatus.textContent = "OK";
+          } else {
+            ui.smhiStatus.textContent = "Fel";
+          }
+
+          if (sl.status === "fulfilled" && sl.value) {
+            ui.slStatus.textContent = "OK";
+          } else {
+            ui.slStatus.textContent = "Fel";
+          }
+
+          if (yr.status === "fulfilled" && yr.value) {
+            ui.yrStatus.textContent = "OK";
+          } else {
+            ui.yrStatus.textContent = "Fel";
+          }
+
+          if (smhi.status !== "fulfilled") throw new Error("SMHI saknas");
+
+          const smhiDays = summarizeSmhi(smhi.value);
+          const yrDays = yr.status === "fulfilled" ? summarizeYrNo(yr.value) : [];
+          const days = smhiDays.map((day, index) => {
+            const yrDay = yrDays[index];
+            const blended = yrDay
+              ? {
+                  temp: average([day.temp, yrDay.temp]),
+                  wind: average([day.wind, yrDay.wind]),
+                  precip: average([day.precip, yrDay.precip]),
+                  weather: `${day.weather} / ${yrDay.weather}`,
+                }
+              : day;
+            return {
+              ...day,
+              ...blended,
+              slIssues: 0,
+              sl: "",
+              slRaw: sl.status === "fulfilled" ? sl.value : null,
+              yrRaw: yr.status === "fulfilled" ? yr.value : null,
+            };
+          });
+
+          if (sl.status === "fulfilled" && sl.value) {
+            const summary = summarizeSl(sl.value);
+            days.forEach((day) => {
+              day.slIssues = summary.issues;
+              day.sl = summary.text;
+              day.slCause = summary.causeText;
+            });
+          }
+
+          days.forEach((day) => {
+            day.score = calculateScore(day);
+          });
+
+          renderToday(days[0]);
+          renderSummary(days);
+          renderForecast(days);
+        } catch (error) {
+          ui.todayStatus.textContent = "Kunde inte hämta data";
+          ui.todayStatus.className = "status bad";
+          ui.todayMetrics.textContent = "";
+          ui.summaryMetrics.textContent = "";
+          ui.summaryNote.textContent = error.message;
+          ui.forecastGrid.textContent = "";
+        }
+      }
+
+      const storedFrom = localStorage.getItem("routeFrom") || route.from.name;
+      const storedTo = localStorage.getItem("routeTo") || route.to.name;
+      populateSelect(ui.fromSelect, storedFrom);
+      populateSelect(ui.toSelect, storedTo);
+      setRoute(storedFrom, storedTo);
+      ui.slLineIds.value = formatList(slFilterState.lineIds);
+      ui.slModes.value = formatList(slFilterState.transportModes);
+      updateSlFilterNote();
+
+      ui.swapRoute.addEventListener("click", () => {
+        const fromValue = ui.fromSelect.value;
+        ui.fromSelect.value = ui.toSelect.value;
+        ui.toSelect.value = fromValue;
+        setRoute(ui.fromSelect.value, ui.toSelect.value);
+        refresh();
+      });
+
+      ui.updateRoute.addEventListener("click", () => {
+        setRoute(ui.fromSelect.value, ui.toSelect.value);
+        refresh();
+      });
+
+      ui.saveSlFilters.addEventListener("click", () => {
+        const fromSite = ui.slSiteFrom.value.trim();
+        const toSite = ui.slSiteTo.value.trim();
+        if (fromSite) {
+          slFilterState.siteMap[route.from.name] = fromSite;
+        } else {
+          delete slFilterState.siteMap[route.from.name];
+        }
+        if (toSite) {
+          slFilterState.siteMap[route.to.name] = toSite;
+        } else {
+          delete slFilterState.siteMap[route.to.name];
+        }
+        slFilterState.lineIds = parseList(ui.slLineIds.value);
+        slFilterState.transportModes = parseList(ui.slModes.value);
+        localStorage.setItem("slSiteMap", JSON.stringify(slFilterState.siteMap));
+        localStorage.setItem("slLineIds", formatList(slFilterState.lineIds));
+        localStorage.setItem(
+          "slTransportModes",
+          formatList(slFilterState.transportModes)
+        );
+        updateSlFilterNote();
+        refresh();
+      });
+
+      ui.resetSlFilters.addEventListener("click", () => {
+        ui.slSiteFrom.value = "";
+        ui.slSiteTo.value = "";
+        slFilterState.lineIds = [];
+        slFilterState.transportModes = [];
+        ui.slLineIds.value = "";
+        ui.slModes.value = "";
+        delete slFilterState.siteMap[route.from.name];
+        delete slFilterState.siteMap[route.to.name];
+        localStorage.setItem("slSiteMap", JSON.stringify(slFilterState.siteMap));
+        localStorage.setItem("slLineIds", "");
+        localStorage.setItem(
+          "slTransportModes",
+          formatList(slFilterState.transportModes)
+        );
+        updateSlFilterNote();
+        refresh();
+      });
+
+      function syncSlInputs() {
+        ui.slSiteFrom.value = slFilterState.siteMap[route.from.name] || "";
+        ui.slSiteTo.value = slFilterState.siteMap[route.to.name] || "";
+      }
+
+      function updateSlFilterNote() {
+        const fromSite = slFilterState.siteMap[route.from.name];
+        const toSite = slFilterState.siteMap[route.to.name];
+        const filters = [];
+        if (fromSite || toSite) {
+          filters.push("site");
+        }
+        if (slFilterState.lineIds.length) {
+          filters.push("line");
+        }
+        if (slFilterState.transportModes.length) {
+          filters.push("transport_mode");
+        }
+        ui.slFilterNote.textContent = filters.length
+          ? `Aktiva filter: ${filters.join(", ")}.`
+          : "Inga filter aktiva.";
+      }
+
+      refresh();
+    </script>
+  </body>
+</html>

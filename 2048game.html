@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>2048 i Canvas</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #faf8ef; color: #776e65; display: grid; place-items: center; min-height: 100vh;
+    }
+    .wrap { width: min(520px, 92vw); }
+    header { display: flex; align-items: end; justify-content: space-between; gap: 12px; margin: 16px 0; }
+    h1 { margin: 0; font-size: 44px; letter-spacing: -0.5px; }
+    .meta { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+    .pill {
+      background: #bbada0; color: #f9f6f2; padding: 10px 12px; border-radius: 10px;
+      min-width: 88px; text-align: center; line-height: 1.1;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.08) inset;
+    }
+    .pill small { display: block; opacity: 0.9; font-weight: 600; }
+    .pill strong { display: block; font-size: 20px; margin-top: 3px; }
+    button {
+      border: 0; background: #8f7a66; color: #f9f6f2; padding: 12px 14px; border-radius: 10px;
+      cursor: pointer; font-weight: 700;
+    }
+    button:active { transform: translateY(1px); }
+    canvas {
+      width: 100%;
+      height: auto;
+      border-radius: 14px;
+      background: #bbada0;
+      touch-action: none; /* för swipe */
+      display: block;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.10);
+    }
+    .hint { margin: 10px 2px 24px; font-size: 14px; color: #776e65; }
+    .overlay {
+      position: fixed; inset: 0; display: none; place-items: center;
+      background: rgba(238,228,218,0.75);
+      backdrop-filter: blur(2px);
+    }
+    .card {
+      background: #faf8ef; border-radius: 16px; padding: 18px 18px 14px;
+      width: min(420px, 90vw); box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+      text-align: center;
+    }
+    .card h2 { margin: 6px 0 8px; }
+    .card p { margin: 0 0 14px; }
+    .row { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>2048</h1>
+      </div>
+      <div class="meta">
+        <div class="pill"><small>POÄNG</small><strong id="score">0</strong></div>
+        <div class="pill"><small>BÄST</small><strong id="best">0</strong></div>
+        <button id="newGame">Nytt spel</button>
+      </div>
+    </header>
+
+    <canvas id="game" width="520" height="520" aria-label="2048 canvas"></canvas>
+    <div class="hint">Piltangenter på dator. Swipe på mobil. Tryck “Nytt spel” för att börja om.</div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="card">
+      <h2 id="overlayTitle">Slut!</h2>
+      <p id="overlayText">Inga fler drag.</p>
+      <div class="row">
+        <button id="tryAgain">Spela igen</button>
+        <button id="keepGoing" style="display:none;background:#5f9ea0;">Fortsätt</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  "use strict";
+
+  // ---- Konfiguration ----
+  const SIZE = 4;
+  const SPAWN = [2, 2, 2, 2, 2, 2, 4]; // ~ 6/7 tvåor, 1/7 fyror
+  const ANIM_MS = 120;
+
+  // ---- DOM ----
+  const canvas = document.getElementById("game");
+  const ctx = canvas.getContext("2d");
+  const scoreEl = document.getElementById("score");
+  const bestEl  = document.getElementById("best");
+  const newGameBtn = document.getElementById("newGame");
+
+  const overlay = document.getElementById("overlay");
+  const overlayTitle = document.getElementById("overlayTitle");
+  const overlayText  = document.getElementById("overlayText");
+  const tryAgainBtn  = document.getElementById("tryAgain");
+  const keepGoingBtn = document.getElementById("keepGoing");
+
+  // ---- State ----
+  let grid, score, best, won, keepGoing;
+  let anim = null; // { t0, fromGrid, toGrid }
+
+  // För att rita responsivt mot canvasens interna pixelstorlek:
+  function resizeCanvas() {
+    // Behåll kvadratisk intern storlek baserat på CSS-bredd
+    const cssW = canvas.getBoundingClientRect().width;
+    const dpr = window.devicePixelRatio || 1;
+    const px = Math.round(cssW * dpr);
+    canvas.width = px;
+    canvas.height = px;
+    draw();
+  }
+
+  function emptyGrid() {
+    return Array.from({length: SIZE}, () => Array(SIZE).fill(0));
+  }
+
+  function cloneGrid(g) {
+    return g.map(row => row.slice());
+  }
+
+  function gridsEqual(a, b) {
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) if (a[r][c] !== b[r][c]) return false;
+    return true;
+  }
+
+  function loadBest() {
+    const v = Number(localStorage.getItem("best2048") || "0");
+    return Number.isFinite(v) ? v : 0;
+  }
+
+  function saveBest(v) {
+    localStorage.setItem("best2048", String(v));
+  }
+
+  function spawnTile(g) {
+    const empties = [];
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) if (g[r][c] === 0) empties.push([r,c]);
+    if (empties.length === 0) return false;
+    const [r,c] = empties[Math.floor(Math.random()*empties.length)];
+    g[r][c] = SPAWN[Math.floor(Math.random()*SPAWN.length)];
+    return true;
+  }
+
+  function canMove(g) {
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+      if (g[r][c] === 0) return true;
+      const v = g[r][c];
+      if (r+1<SIZE && g[r+1][c] === v) return true;
+      if (c+1<SIZE && g[r][c+1] === v) return true;
+    }
+    return false;
+  }
+
+  function maxTile(g) {
+    let m=0;
+    for (const row of g) for (const v of row) m = Math.max(m, v);
+    return m;
+  }
+
+  // ---- Flyttlogik ----
+  function slideLine(line) {
+    // line är en array med SIZE element
+    const arr = line.filter(v => v !== 0);
+    let gained = 0;
+    for (let i=0; i < arr.length-1; i++) {
+      if (arr[i] !== 0 && arr[i] === arr[i+1]) {
+        arr[i] *= 2;
+        gained += arr[i];
+        arr[i+1] = 0;
+        i++;
+      }
+    }
+    const merged = arr.filter(v => v !== 0);
+    while (merged.length < SIZE) merged.push(0);
+    return { line: merged, gained };
+  }
+
+  function move(dir) {
+    if (overlay.style.display === "grid" && !keepGoing) return;
+
+    const before = cloneGrid(grid);
+    let gainedTotal = 0;
+
+    const setLine = (r,c,val) => { grid[r][c] = val; };
+
+    if (dir === "left" || dir === "right") {
+      for (let r=0; r<SIZE; r++) {
+        const line = grid[r].slice();
+        const use = (dir === "right") ? line.reverse() : line;
+        const { line: out, gained } = slideLine(use);
+        gainedTotal += gained;
+        const final = (dir === "right") ? out.reverse() : out;
+        for (let c=0;c<SIZE;c++) setLine(r,c,final[c]);
+      }
+    } else {
+      for (let c=0; c<SIZE; c++) {
+        const line = [];
+        for (let r=0;r<SIZE;r++) line.push(grid[r][c]);
+        const use = (dir === "down") ? line.reverse() : line;
+        const { line: out, gained } = slideLine(use);
+        gainedTotal += gained;
+        const final = (dir === "down") ? out.reverse() : out;
+        for (let r=0;r<SIZE;r++) setLine(r,c,final[r]);
+      }
+    }
+
+    if (gridsEqual(before, grid)) {
+      draw();
+      return; // inget hände
+    }
+
+    // spawn efter flytt
+    spawnTile(grid);
+
+    // uppdatera score/best
+    score += gainedTotal;
+    best = Math.max(best, score);
+    saveBest(best);
+    scoreEl.textContent = String(score);
+    bestEl.textContent  = String(best);
+
+    // animation: interpollera från before till grid visuellt
+    anim = { t0: performance.now(), from: before, to: cloneGrid(grid) };
+    requestAnimationFrame(tick);
+
+    // vinst / game over
+    if (!won && maxTile(grid) >= 2048) {
+      won = true;
+      showOverlay(true);
+    } else if (!canMove(grid)) {
+      showOverlay(false);
+    } else {
+      hideOverlay(); // om man fortsätter efter vinst och fortfarande kan spela
+    }
+  }
+
+  // ---- Rendering ----
+  function lerp(a,b,t){ return a + (b-a)*t; }
+
+  function drawGrid(g, alpha=1) {
+    const w = canvas.width, h = canvas.height;
+    const pad = w * 0.04;
+    const gap = w * 0.03;
+    const board = w - pad*2;
+    const cell = (board - gap*(SIZE-1)) / SIZE;
+
+    // bakgrund
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.fillStyle = "#bbada0";
+    ctx.fillRect(0,0,w,h);
+
+    // cell-bakgrunder
+    ctx.fillStyle = "#cdc1b4";
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+      const x = pad + c*(cell+gap);
+      const y = pad + r*(cell+gap);
+      roundRect(x,y,cell,cell,cell*0.12, true, false);
+    }
+
+    // tiles
+    for (let r=0;r<SIZE;r++) for (let c=0;c<SIZE;c++) {
+      const v = g[r][c];
+      if (!v) continue;
+
+      const x = pad + c*(cell+gap);
+      const y = pad + r*(cell+gap);
+
+      // färger inspirerade av original 2048
+      const tileColors = {
+        2:"#eee4da",4:"#ede0c8",8:"#f2b179",16:"#f59563",32:"#f67c5f",64:"#f65e3b",
+        128:"#edcf72",256:"#edcc61",512:"#edc850",1024:"#edc53f",2048:"#edc22e"
+      };
+      const bg = tileColors[v] || "#3c3a32";
+      const fg = (v <= 4) ? "#776e65" : "#f9f6f2";
+
+      ctx.fillStyle = bg;
+      roundRect(x,y,cell,cell,cell*0.12, true, false);
+
+      ctx.fillStyle = fg;
+      const s = String(v);
+      // anpassa fontstorlek efter antal siffror
+      let fs = cell * 0.42;
+      if (s.length === 3) fs = cell * 0.34;
+      if (s.length === 4) fs = cell * 0.28;
+      if (s.length >= 5) fs = cell * 0.22;
+
+      ctx.font = `700 ${fs}px system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(s, x + cell/2, y + cell/2 + cell*0.02);
+    }
+
+    ctx.restore();
+  }
+
+  function roundRect(x,y,w,h,r,fill,stroke) {
+    const rr = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+rr, y);
+    ctx.arcTo(x+w, y, x+w, y+h, rr);
+    ctx.arcTo(x+w, y+h, x, y+h, rr);
+    ctx.arcTo(x, y+h, x, y, rr);
+    ctx.arcTo(x, y, x+w, y, rr);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+  function draw() {
+    if (!anim) {
+      drawGrid(grid, 1);
+      return;
+    }
+    const t = (performance.now() - anim.t0) / ANIM_MS;
+    const tt = Math.min(1, Math.max(0, t));
+    // enkel crossfade mellan before och after
+    drawGrid(anim.from, 1 - tt);
+    drawGrid(anim.to, tt);
+    if (tt >= 1) anim = null;
+  }
+
+  function tick() {
+    draw();
+    if (anim) requestAnimationFrame(tick);
+  }
+
+  // ---- Overlay ----
+  function showOverlay(isWin) {
+    overlay.style.display = "grid";
+    if (isWin) {
+      overlayTitle.textContent = "Du vann!";
+      overlayText.textContent = "Du nådde 2048. Vill du fortsätta spela?";
+      keepGoingBtn.style.display = "inline-block";
+    } else {
+      overlayTitle.textContent = "Slut!";
+      overlayText.textContent = "Inga fler drag.";
+      keepGoingBtn.style.display = "none";
+    }
+  }
+
+  function hideOverlay() {
+    if (!won || keepGoing) overlay.style.display = "none";
+  }
+
+  // ---- Input (keyboard + swipe) ----
+  function onKey(e) {
+    const k = e.key;
+    if (k === "ArrowLeft") { e.preventDefault(); move("left"); }
+    else if (k === "ArrowRight") { e.preventDefault(); move("right"); }
+    else if (k === "ArrowUp") { e.preventDefault(); move("up"); }
+    else if (k === "ArrowDown") { e.preventDefault(); move("down"); }
+  }
+
+  let touchStart = null;
+  function onPointerDown(e) {
+    canvas.setPointerCapture(e.pointerId);
+    touchStart = { x: e.clientX, y: e.clientY, t: performance.now() };
+  }
+  function onPointerUp(e) {
+    if (!touchStart) return;
+    const dx = e.clientX - touchStart.x;
+    const dy = e.clientY - touchStart.y;
+    const adx = Math.abs(dx), ady = Math.abs(dy);
+
+    const dist = Math.max(adx, ady);
+    if (dist < 18) { touchStart = null; return; } // för kort swipe
+
+    if (adx > ady) move(dx > 0 ? "right" : "left");
+    else move(dy > 0 ? "down" : "up");
+    touchStart = null;
+  }
+
+  // ---- Game lifecycle ----
+  function reset() {
+    grid = emptyGrid();
+    score = 0;
+    won = false;
+    keepGoing = false;
+    best = loadBest();
+
+    spawnTile(grid);
+    spawnTile(grid);
+
+    scoreEl.textContent = "0";
+    bestEl.textContent  = String(best);
+
+    overlay.style.display = "none";
+    anim = null;
+    draw();
+  }
+
+  // ---- Bind ----
+  window.addEventListener("resize", resizeCanvas, { passive: true });
+  window.addEventListener("keydown", onKey);
+
+  canvas.addEventListener("pointerdown", onPointerDown);
+  canvas.addEventListener("pointerup", onPointerUp);
+  canvas.addEventListener("pointercancel", () => touchStart = null);
+
+  newGameBtn.addEventListener("click", reset);
+  tryAgainBtn.addEventListener("click", reset);
+  keepGoingBtn.addEventListener("click", () => { keepGoing = true; hideOverlay(); });
+
+  // Init
+  resizeCanvas();
+  reset();
+})();
+</script>
+</body>
+</html>
