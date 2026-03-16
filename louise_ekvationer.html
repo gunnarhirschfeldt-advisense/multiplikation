@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d0d1a">
+<title>Louise's Equation Lab</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0d0d1a;
+  --surface:  #161628;
+  --card:     #1e1e38;
+  --border:   #2e2e52;
+  --pink:     #ff6eb4;
+  --teal:     #00e5c8;
+  --yellow:   #ffe566;
+  --purple:   #c084fc;
+  --red:      #ff5a7e;
+  --green:    #4ade80;
+  --text:     #f0f0ff;
+  --muted:    #6b6b9a;
+  --heading:  'Syne', sans-serif;
+  --mono:     'DM Mono', monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--heading);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Animated background blobs */
+.bg-blobs {
+  position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+}
+.blob {
+  position: absolute; border-radius: 50%; filter: blur(80px); opacity: 0.12;
+  animation: drift 12s ease-in-out infinite alternate;
+}
+.blob-1 { width: 400px; height: 400px; background: var(--pink); top: -100px; left: -100px; animation-delay: 0s; }
+.blob-2 { width: 300px; height: 300px; background: var(--teal); bottom: -50px; right: -50px; animation-delay: -4s; }
+.blob-3 { width: 250px; height: 250px; background: var(--purple); top: 40%; left: 40%; animation-delay: -8s; }
+@keyframes drift {
+  from { transform: translate(0, 0) scale(1); }
+  to   { transform: translate(30px, 20px) scale(1.08); }
+}
+
+#app {
+  position: relative; z-index: 1;
+  max-width: 480px; margin: 0 auto;
+  min-height: 100vh; display: flex; flex-direction: column;
+}
+
+/* ── SCREENS ── */
+.screen { display: none; flex-direction: column; flex: 1; }
+.screen.active { display: flex; }
+
+/* ── HEADER ── */
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13,13,26,0.8);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 10;
+}
+.logo {
+  font-size: 13px; font-weight: 800; letter-spacing: 2px;
+  background: linear-gradient(90deg, var(--pink), var(--teal));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.top-pills { display: flex; gap: 8px; }
+.pill {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 4px 12px;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  display: flex; align-items: center; gap: 5px;
+}
+.pill span { color: var(--text); font-weight: 500; }
+
+/* ── HOME ── */
+.home-content {
+  padding: 32px 24px 100px;
+  display: flex; flex-direction: column; gap: 24px;
+  overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+
+.hero-block { text-align: center; padding: 16px 0; }
+.hero-greeting {
+  font-size: 13px; letter-spacing: 3px; color: var(--muted); margin-bottom: 10px;
+}
+.hero-name {
+  font-size: 38px; font-weight: 800; line-height: 1.1;
+  background: linear-gradient(135deg, var(--pink) 0%, var(--purple) 50%, var(--teal) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 8px;
+}
+.hero-sub { color: var(--muted); font-size: 14px; font-weight: 400; }
+
+/* XP bar */
+.xp-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  padding: 18px 20px; position: relative; overflow: hidden;
+}
+.xp-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--pink), var(--teal));
+}
+.xp-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.xp-level { font-size: 11px; letter-spacing: 2px; color: var(--purple); font-weight: 700; }
+.xp-name { font-size: 11px; letter-spacing: 1px; color: var(--yellow); font-weight: 700; }
+.xp-track {
+  height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden; margin-bottom: 6px;
+}
+.xp-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--purple), var(--pink));
+  transition: width 1s cubic-bezier(0.34,1.56,0.64,1);
+}
+.xp-sub { font-family: var(--mono); font-size: 10px; color: var(--muted); text-align: right; }
+
+/* Difficulty buttons */
+.section-label {
+  font-size: 10px; letter-spacing: 3px; color: var(--muted); font-weight: 700; margin-bottom: 12px;
+}
+.diff-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.diff-btn {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 8px; text-align: center; cursor: pointer;
+  transition: all 0.2s; -webkit-user-select: none; user-select: none;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+}
+.diff-btn.selected {
+  border-color: var(--pink); background: rgba(255,110,180,0.1);
+  box-shadow: 0 0 20px rgba(255,110,180,0.2);
+}
+.diff-btn:active { transform: scale(0.96); }
+.diff-icon { font-size: 24px; }
+.diff-name { font-size: 10px; letter-spacing: 1px; font-weight: 700; color: var(--text); }
+.diff-desc { font-size: 10px; color: var(--muted); font-family: var(--mono); }
+
+/* Start button */
+.start-btn {
+  width: 100%; padding: 20px;
+  background: linear-gradient(135deg, var(--pink), var(--purple));
+  color: #fff; font-family: var(--heading); font-size: 15px; font-weight: 800;
+  letter-spacing: 2px; border: none; border-radius: 14px; cursor: pointer;
+  box-shadow: 0 8px 30px rgba(255,110,180,0.35);
+  transition: all 0.15s; position: relative; overflow: hidden;
+}
+.start-btn::before {
+  content: ''; position: absolute; top: 3px; left: 10px; right: 10px; height: 4px;
+  background: rgba(255,255,255,0.25); border-radius: 2px;
+}
+.start-btn:active { transform: scale(0.97); box-shadow: 0 4px 15px rgba(255,110,180,0.25); }
+
+/* Stats row */
+.stats-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.stat-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 14px 10px; text-align: center;
+}
+.stat-val { font-size: 24px; font-weight: 800; display: block; margin-bottom: 3px; }
+.stat-lbl { font-size: 9px; letter-spacing: 2px; color: var(--muted); font-weight: 700; }
+
+/* Streak row */
+.streak-row { display: flex; gap: 6px; justify-content: center; }
+.streak-day {
+  flex: 1; aspect-ratio: 1; max-width: 44px;
+  border: 1px solid var(--border); border-radius: 8px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; font-size: 9px; color: var(--muted); transition: all 0.3s;
+}
+.streak-day.done {
+  background: linear-gradient(135deg, var(--pink), var(--purple));
+  border-color: var(--pink); color: #fff;
+  box-shadow: 0 0 12px rgba(255,110,180,0.3);
+}
+.streak-day.today { border-color: var(--yellow); animation: pulse-yellow 1.5s ease-in-out infinite; }
+@keyframes pulse-yellow {
+  0%,100% { box-shadow: 0 0 0 0 rgba(255,229,102,0.4); }
+  50%      { box-shadow: 0 0 0 6px rgba(255,229,102,0); }
+}
+
+/* ── GAME SCREEN ── */
+.game-header {
+  padding: 14px 20px; display: flex; align-items: center; gap: 12px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13,13,26,0.9); backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 10;
+}
+.back-btn {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  color: var(--muted); font-family: var(--mono); font-size: 12px;
+  padding: 7px 12px; cursor: pointer; flex-shrink: 0;
+}
+.progress-track {
+  flex: 1; height: 8px; background: var(--bg); border-radius: 4px; overflow: hidden;
+}
+.progress-fill {
+  height: 100%; border-radius: 4px;
+  background: linear-gradient(90deg, var(--teal), var(--green));
+  transition: width 0.4s ease;
+}
+.game-score {
+  font-family: var(--mono); font-size: 12px; color: var(--yellow); flex-shrink: 0;
+}
+
+.game-body { flex: 1; overflow-y: auto; padding: 20px 20px 100px; display: flex; flex-direction: column; gap: 20px; }
+
+/* Equation display */
+.equation-prompt {
+  text-align: center; font-size: 11px; letter-spacing: 3px; color: var(--muted);
+  font-weight: 700;
+}
+
+/* THE SCALE */
+.scale-wrap { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0; }
+
+.scale-beam-wrap {
+  width: 100%; position: relative; height: 24px; display: flex; align-items: center; justify-content: center;
+}
+.scale-beam {
+  width: 88%; height: 6px; background: var(--border); border-radius: 3px;
+  position: relative; transition: transform 0.5s cubic-bezier(0.34,1.56,0.64,1);
+  transform-origin: center center;
+}
+.scale-beam.left-heavy  { transform: rotate(-8deg); }
+.scale-beam.right-heavy { transform: rotate(8deg); }
+.scale-beam.balanced    { transform: rotate(0deg); background: var(--green); box-shadow: 0 0 16px rgba(74,222,128,0.5); }
+
+.scale-pivot {
+  width: 16px; height: 40px; background: var(--border); border-radius: 3px;
+  position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%);
+  z-index: 1;
+}
+.scale-base {
+  width: 80px; height: 10px; background: var(--border); border-radius: 5px;
+  margin-top: 36px;
+}
+
+.scale-pans { width: 100%; display: flex; justify-content: space-between; padding: 0 6%; margin-top: -4px; }
+.pan {
+  width: 42%; min-height: 90px;
+  background: var(--card); border: 2px solid var(--border); border-radius: 12px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; padding: 12px 8px; transition: all 0.3s; position: relative;
+}
+.pan.drop-target { border-color: var(--pink); background: rgba(255,110,180,0.08); }
+.pan.balanced-pan { border-color: var(--green); box-shadow: 0 0 20px rgba(74,222,128,0.2); }
+
+.pan-label {
+  position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+  background: var(--bg); padding: 0 8px;
+  font-size: 9px; letter-spacing: 2px; color: var(--muted); font-weight: 700; white-space: nowrap;
+}
+
+.pan-value {
+  font-size: 28px; font-weight: 800; font-family: var(--mono);
+  color: var(--text); transition: all 0.3s;
+}
+.pan-value.changed { animation: value-pop 0.4s cubic-bezier(0.34,1.56,0.64,1); }
+@keyframes value-pop {
+  0%,100% { transform: scale(1); }
+  50%     { transform: scale(1.2); }
+}
+
+.pan-tokens { display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; min-height: 24px; }
+.pan-token {
+  background: rgba(255,110,180,0.2); border: 1px solid var(--pink);
+  border-radius: 6px; padding: 3px 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--pink);
+  cursor: pointer; transition: all 0.15s; -webkit-user-select: none;
+}
+.pan-token:active { transform: scale(0.9); opacity: 0.7; }
+.pan-token.unknown {
+  background: rgba(192,132,252,0.2); border-color: var(--purple); color: var(--purple);
+  font-weight: 700; font-size: 13px;
+}
+
+/* Token bank */
+.bank-label {
+  font-size: 10px; letter-spacing: 3px; color: var(--muted); font-weight: 700; text-align: center;
+}
+.token-bank {
+  display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px 14px; min-height: 60px;
+}
+.bank-token {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 10px 16px; font-family: var(--mono); font-size: 15px; font-weight: 500;
+  color: var(--text); cursor: pointer; transition: all 0.15s;
+  -webkit-user-select: none; user-select: none;
+}
+.bank-token:active { transform: scale(0.92); background: var(--border); }
+.bank-token.number { color: var(--teal); border-color: rgba(0,229,200,0.3); }
+.bank-token.unknown-tok { color: var(--purple); border-color: rgba(192,132,252,0.4); font-size: 17px; font-weight: 700; }
+.bank-token.used { opacity: 0.3; pointer-events: none; }
+
+/* Check & hint buttons */
+.action-row { display: flex; gap: 10px; }
+.check-btn {
+  flex: 2; padding: 16px; background: linear-gradient(135deg, var(--teal), var(--green));
+  color: #000; font-family: var(--heading); font-size: 13px; font-weight: 800;
+  letter-spacing: 1px; border: none; border-radius: 12px; cursor: pointer;
+  transition: all 0.15s; box-shadow: 0 4px 20px rgba(0,229,200,0.25);
+}
+.check-btn:active { transform: scale(0.97); }
+.check-btn:disabled { opacity: 0.4; pointer-events: none; }
+.hint-btn {
+  flex: 1; padding: 16px; background: var(--card); border: 1px solid var(--border);
+  color: var(--muted); font-family: var(--heading); font-size: 12px; font-weight: 700;
+  letter-spacing: 1px; border-radius: 12px; cursor: pointer; transition: all 0.15s;
+}
+.hint-btn:active { transform: scale(0.97); }
+
+.hint-box {
+  background: rgba(255,229,102,0.08); border: 1px solid rgba(255,229,102,0.3);
+  border-radius: 10px; padding: 14px 16px;
+  font-size: 13px; color: var(--yellow); line-height: 1.6; display: none;
+}
+
+/* Equation equation text shown above scale */
+.eq-display {
+  text-align: center;
+  font-family: var(--mono); font-size: 20px; color: var(--text);
+  background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+  padding: 16px 20px; letter-spacing: 2px;
+}
+.eq-unknown { color: var(--purple); font-weight: 700; }
+.eq-solved  { color: var(--green); }
+
+/* Feedback overlay */
+.feedback-overlay {
+  position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+  z-index: 100; pointer-events: none; opacity: 0; transition: opacity 0.15s;
+}
+.feedback-overlay.show { opacity: 1; }
+.feedback-bubble {
+  font-size: 28px; font-weight: 800; padding: 18px 36px; border-radius: 12px;
+  border: 2px solid; letter-spacing: 1px; text-align: center;
+  animation: pop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.feedback-bubble.correct { background: rgba(74,222,128,0.15); border-color: var(--green); color: var(--green); }
+.feedback-bubble.wrong   { background: rgba(255,90,126,0.15); border-color: var(--red);   color: var(--red);   }
+@keyframes pop {
+  from { transform: scale(0.5); opacity: 0; }
+  to   { transform: scale(1);   opacity: 1; }
+}
+
+/* Result modal */
+.result-modal {
+  position: fixed; inset: 0; background: rgba(13,13,26,0.92);
+  display: none; align-items: center; justify-content: center; z-index: 200; padding: 24px;
+}
+.result-modal.show { display: flex; }
+.result-box {
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 36px 28px; text-align: center; width: 100%; max-width: 360px;
+  animation: pop 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+.result-emoji { font-size: 56px; display: block; margin-bottom: 14px; }
+.result-title {
+  font-size: 26px; font-weight: 800; margin-bottom: 6px;
+  background: linear-gradient(135deg, var(--pink), var(--teal));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+}
+.result-sub { color: var(--muted); font-size: 14px; margin-bottom: 24px; }
+.result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+.result-stat {
+  background: var(--surface); border-radius: 10px; padding: 14px;
+}
+.result-stat .val { font-size: 26px; font-weight: 800; font-family: var(--mono); display: block; margin-bottom: 3px; }
+.result-stat .lbl { font-size: 9px; letter-spacing: 2px; color: var(--muted); }
+.result-xp {
+  background: rgba(192,132,252,0.15); border: 1px solid rgba(192,132,252,0.4);
+  border-radius: 10px; padding: 14px; margin-bottom: 20px;
+  font-size: 16px; font-weight: 700; color: var(--purple); letter-spacing: 1px;
+}
+.btn-again {
+  width: 100%; padding: 16px; background: linear-gradient(135deg, var(--pink), var(--purple));
+  color: #fff; font-family: var(--heading); font-size: 14px; font-weight: 800;
+  border: none; border-radius: 12px; cursor: pointer; margin-bottom: 10px;
+  letter-spacing: 1px; box-shadow: 0 6px 20px rgba(255,110,180,0.3);
+}
+.btn-home {
+  width: 100%; padding: 12px; background: var(--surface); border: 1px solid var(--border);
+  color: var(--muted); font-family: var(--heading); font-size: 12px; font-weight: 700;
+  border-radius: 12px; cursor: pointer; letter-spacing: 1px;
+}
+
+/* Confetti canvas */
+#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 150; }
+
+/* Particles */
+.particle {
+  position: fixed; pointer-events: none; z-index: 99; font-size: 18px;
+  animation: pfly 0.7s ease-out forwards;
+}
+@keyframes pfly {
+  0%   { transform: translate(0,0) scale(1); opacity: 1; }
+  100% { transform: translate(var(--dx),var(--dy)) scale(0); opacity: 0; }
+}
+</style>
+</head>
+<body>
+<div class="bg-blobs">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+<canvas id="confetti"></canvas>
+<div class="feedback-overlay" id="feedbackOverlay"><div class="feedback-bubble" id="feedbackBubble"></div></div>
+<div class="result-modal" id="resultModal">
+  <div class="result-box">
+    <span class="result-emoji" id="resEmoji">🏆</span>
+    <div class="result-title" id="resTitle">Fantastiskt!</div>
+    <div class="result-sub" id="resSub">Du klarade alla ekvationer!</div>
+    <div class="result-grid">
+      <div class="result-stat"><span class="val" id="resCorrect" style="color:var(--green)">0</span><span class="lbl">RÄTT</span></div>
+      <div class="result-stat"><span class="val" id="resWrong" style="color:var(--red)">0</span><span class="lbl">FEL</span></div>
+    </div>
+    <div class="result-xp" id="resXP">⭐ +0 XP</div>
+    <button class="btn-again" onclick="startGame()">▶ SPELA IGEN</button>
+    <button class="btn-home" onclick="goHome()">← HEM</button>
+  </div>
+</div>
+
+<div id="app">
+
+  <!-- ══ HOME ══ -->
+  <div class="screen active" id="homeScreen">
+    <div class="top-bar">
+      <div class="logo">EQ LAB</div>
+      <div class="top-pills">
+        <div class="pill">🔥 <span id="hStreak">0</span></div>
+        <div class="pill">⭐ <span id="hXP">0</span></div>
+      </div>
+    </div>
+    <div class="home-content">
+      <div class="hero-block">
+        <div class="hero-greeting">VÄLKOMMEN TILLBAKA</div>
+        <div class="hero-name" id="heroName">LOUISE</div>
+        <div class="hero-sub">Balansera vågen — lös ekvationen!</div>
+      </div>
+
+      <!-- XP -->
+      <div class="xp-card">
+        <div class="xp-row">
+          <span class="xp-level">LEVEL <span id="xpLevel">1</span></span>
+          <span class="xp-name" id="xpTitle">NYBÖRJARE</span>
+        </div>
+        <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+        <div class="xp-sub"><span id="curXP">0</span> / <span id="nxtXP">100</span> XP</div>
+      </div>
+
+      <!-- Stats -->
+      <div>
+        <div class="section-label">TOTALT</div>
+        <div class="stats-row">
+          <div class="stat-card"><span class="stat-val" style="color:var(--teal)" id="stTotal">0</span><span class="stat-lbl">LÖSTA</span></div>
+          <div class="stat-card"><span class="stat-val" style="color:var(--pink)" id="stStreak">0</span><span class="stat-lbl">STREAK</span></div>
+          <div class="stat-card"><span class="stat-val" style="color:var(--yellow)" id="stPct">—</span><span class="stat-lbl">TRÄFF%</span></div>
+        </div>
+      </div>
+
+      <!-- Streak -->
+      <div>
+        <div class="section-label">DAGSSTREAK</div>
+        <div class="streak-row" id="streakRow"></div>
+      </div>
+
+      <!-- Difficulty -->
+      <div>
+        <div class="section-label">SVÅRIGHETSGRAD</div>
+        <div class="diff-grid">
+          <div class="diff-btn selected" id="dEasy" onclick="setDiff('easy',this)">
+            <span class="diff-icon">🌱</span>
+            <div class="diff-name">ENKEL</div>
+            <div class="diff-desc">x + a = b</div>
+          </div>
+          <div class="diff-btn" id="dMed" onclick="setDiff('medium',this)">
+            <span class="diff-icon">⚗️</span>
+            <div class="diff-name">MEDEL</div>
+            <div class="diff-desc">ax + b = c</div>
+          </div>
+          <div class="diff-btn" id="dHard" onclick="setDiff('hard',this)">
+            <span class="diff-icon">🔬</span>
+            <div class="diff-name">SVÅR</div>
+            <div class="diff-desc">ax + b = cx + d</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="start-btn" onclick="startGame()">▶ STARTA LABBET</button>
+    </div>
+  </div>
+
+  <!-- ══ GAME ══ -->
+  <div class="screen" id="gameScreen">
+    <div class="game-header">
+      <button class="back-btn" onclick="exitGame()">✕</button>
+      <div class="progress-track"><div class="progress-fill" id="progFill" style="width:0%"></div></div>
+      <div class="game-score">⭐ <span id="gScore">0</span></div>
+    </div>
+    <div class="game-body">
+      <div class="equation-prompt" id="eqPrompt">FRÅGA 1 / 8</div>
+
+      <!-- Equation text -->
+      <div class="eq-display" id="eqDisplay">3 + <span class="eq-unknown">x</span> = 10</div>
+
+      <!-- Scale -->
+      <div class="scale-wrap">
+        <div class="scale-pans" id="scalePans">
+          <div class="pan" id="panLeft">
+            <div class="pan-label">VÄNSTER SIDA</div>
+            <div class="pan-value" id="leftVal">—</div>
+            <div class="pan-tokens" id="leftTokens"></div>
+          </div>
+          <div class="pan" id="panRight">
+            <div class="pan-label">HÖGER SIDA</div>
+            <div class="pan-value" id="rightVal">—</div>
+            <div class="pan-tokens" id="rightTokens"></div>
+          </div>
+        </div>
+        <div class="scale-beam-wrap">
+          <div class="scale-beam" id="scaleBeam"></div>
+          <div class="scale-pivot"></div>
+        </div>
+        <div class="scale-base"></div>
+      </div>
+
+      <!-- Token bank -->
+      <div>
+        <div class="bank-label" style="margin-bottom:10px">VÄLJ VÄRDE PÅ x</div>
+        <div class="token-bank" id="tokenBank"></div>
+      </div>
+
+      <!-- Hint -->
+      <div class="hint-box" id="hintBox"></div>
+
+      <!-- Actions -->
+      <div class="action-row">
+        <button class="hint-btn" onclick="showHint()">💡 LEDTRÅD</button>
+        <button class="check-btn" id="checkBtn" onclick="checkAnswer()" disabled>✓ KONTROLLERA</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ══ LEVELS ══
+const LEVELS = [
+  {name:'NYBÖRJARE',   xp:0},
+  {name:'LÄRLING',     xp:80},
+  {name:'UTFORSKAREN', xp:200},
+  {name:'ALGEBRAISTEN',xp:400},
+  {name:'EKVATIONS-NINJA', xp:700},
+  {name:'MATEMATIKERN', xp:1100},
+  {name:'LEGENDEN',    xp:1700},
+];
+
+// ══ STATE ══
+function defaultState() {
+  return {
+    xp:0, totalSolved:0, totalAttempts:0, totalWrong:0,
+    maxStreak:0, dayStreak:0, lastPlayDate:null, maxDayStreak:0,
+    playerName:'Louise',
+  };
+}
+let S = (() => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('louise_eq') || 'null');
+    return saved ? Object.assign({}, defaultState(), saved) : defaultState();
+  } catch(e) { return defaultState(); }
+})();
+function save() { localStorage.setItem('louise_eq', JSON.stringify(S)); }
+
+// ══ GAME STATE ══
+let diff = 'easy';
+let questions = [];
+let qi = 0; // question index
+let selectedAnswer = null;
+let correct = 0;
+let wrong = 0;
+let xpEarned = 0;
+let hintUsed = false;
+const TOTAL_Q = 8;
+
+// ══ EQUATION GENERATORS ══
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+
+function generateEasy() {
+  // x + a = b  OR  a + x = b  OR  b - x = a (x = b - a)
+  const x = randInt(1, 20);
+  const type = randInt(0, 2);
+  if (type === 0) {
+    const a = randInt(1, 15);
+    const b = x + a;
+    return { lhs: `x + ${a}`, rhs: `${b}`, answer: x, hint: `Vad behöver du lägga till ${a} för att få ${b}?`, lhsVal: (v) => v + a, rhsVal: () => b };
+  } else if (type === 1) {
+    const a = randInt(1, 15);
+    const b = a + x;
+    return { lhs: `${a} + x`, rhs: `${b}`, answer: x, hint: `${a} plus vad ger ${b}?`, lhsVal: (v) => a + v, rhsVal: () => b };
+  } else {
+    const a = randInt(x + 1, x + 15);
+    return { lhs: `${a} − x`, rhs: `${x + (a - x - x)}`, answer: a - (a - x - x) - x,
+      // simpler: a - x = b, b = a - x
+      ...(() => { const b = a - x; return { lhs: `${a} − x`, rhs: `${b}`, answer: x, hint: `${a} minus vad ger ${b}?`, lhsVal: (v) => a - v, rhsVal: () => b }; })() };
+  }
+}
+
+function generateMedium() {
+  // 2x + a = b OR 3x - a = b
+  const x = randInt(1, 12);
+  const coeff = randInt(2, 4);
+  const type = randInt(0, 1);
+  if (type === 0) {
+    const a = randInt(1, 10);
+    const b = coeff * x + a;
+    return { lhs: `${coeff}x + ${a}`, rhs: `${b}`, answer: x, hint: `Först: dra bort ${a} från båda sidor. Sedan: dela med ${coeff}.`, lhsVal: (v) => coeff*v + a, rhsVal: () => b };
+  } else {
+    const a = randInt(1, 8);
+    const b = coeff * x - a;
+    if (b <= 0) return generateMedium();
+    return { lhs: `${coeff}x − ${a}`, rhs: `${b}`, answer: x, hint: `Lägg till ${a} på båda sidor. Sedan: dela med ${coeff}.`, lhsVal: (v) => coeff*v - a, rhsVal: () => b };
+  }
+}
+
+function generateHard() {
+  // ax + b = cx + d  (a > c so x is positive)
+  const x = randInt(1, 10);
+  const c = randInt(1, 3);
+  const a = c + randInt(1, 3);
+  const d = randInt(1, 12);
+  const b = (a - c) * x + d - (a - c) * x; // recalc
+  // lhs = ax + b, rhs = cx + d, so ax - cx = d - b → (a-c)x = d-b
+  // pick d and b such that d - b = (a-c)*x
+  const diff2 = (a - c) * x;
+  const dVal = randInt(2, 12);
+  const bVal = dVal - diff2;
+  if (bVal < 0) return generateHard();
+  const lhs_str = bVal === 0 ? `${a}x` : `${a}x + ${bVal}`;
+  const rhs_str = dVal === 0 ? `${c}x` : `${c}x + ${dVal}`;
+  return {
+    lhs: lhs_str, rhs: rhs_str, answer: x,
+    hint: `Flytta x-termerna till en sida: dra bort ${c}x från båda. Sedan löser du den enklare ekvationen.`,
+    lhsVal: (v) => a*v + bVal, rhsVal: (v) => c*v + dVal,
+  };
+}
+
+function generate() {
+  if (diff === 'easy')   return generateEasy();
+  if (diff === 'medium') return generateMedium();
+  return generateHard();
+}
+
+// Candidate answers: correct + wrong distractors
+function makeChoices(answer) {
+  const s = new Set([answer]);
+  while (s.size < 6) {
+    const d = randInt(Math.max(1, answer - 7), answer + 7);
+    if (d > 0) s.add(d);
+  }
+  return [...s].sort(() => Math.random() - 0.5);
+}
+
+// ══ SCREEN NAV ══
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function goHome() {
+  document.getElementById('resultModal').classList.remove('show');
+  showScreen('homeScreen');
+  updateHome();
+}
+
+function exitGame() {
+  // Save partial progress if any questions answered
+  if (correct + wrong > 0) finishGame(true);
+  else goHome();
+}
+
+// ══ HOME ══
+function updateHome() {
+  document.getElementById('heroName').textContent = (S.playerName || 'Louise').toUpperCase();
+  document.getElementById('hStreak').textContent = S.dayStreak;
+  document.getElementById('hXP').textContent = S.xp;
+  document.getElementById('stTotal').textContent = S.totalSolved;
+  document.getElementById('stStreak').textContent = S.maxStreak;
+  const pct = S.totalAttempts > 0 ? Math.round(S.totalSolved / S.totalAttempts * 100) : 0;
+  document.getElementById('stPct').textContent = S.totalAttempts > 0 ? pct + '%' : '—';
+
+  const lvl = getLevel();
+  const next = LEVELS[lvl + 1] || LEVELS[lvl];
+  const pctXP = lvl >= LEVELS.length - 1 ? 100 : Math.min(100, Math.round((S.xp - LEVELS[lvl].xp) / (next.xp - LEVELS[lvl].xp) * 100));
+  document.getElementById('xpLevel').textContent = lvl + 1;
+  document.getElementById('xpTitle').textContent = LEVELS[lvl].name;
+  document.getElementById('xpFill').style.width = pctXP + '%';
+  document.getElementById('curXP').textContent = S.xp;
+  document.getElementById('nxtXP').textContent = next.xp;
+
+  renderStreak();
+}
+
+function getLevel() {
+  let l = 0;
+  for (let i = LEVELS.length - 1; i >= 0; i--) { if (S.xp >= LEVELS[i].xp) { l = i; break; } }
+  return l;
+}
+
+function renderStreak() {
+  const days = ['MÅN','TIS','ONS','TOR','FRE','LÖR','SÖN'];
+  const todayIdx = (() => { const d = new Date().getDay(); return d === 0 ? 6 : d - 1; })();
+  const cont = document.getElementById('streakRow');
+  cont.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const el = document.createElement('div');
+    el.className = 'streak-day';
+    const daysAgo = (todayIdx - i + 7) % 7;
+    if (daysAgo === 0) {
+      el.classList.add('today');
+      el.innerHTML = `<span style="font-size:14px">${S.lastPlayDate === new Date().toDateString() ? '✨' : '○'}</span><span>${days[i]}</span>`;
+    } else if (daysAgo <= S.dayStreak) {
+      el.classList.add('done');
+      el.innerHTML = `<span style="font-size:14px">✨</span><span>${days[i]}</span>`;
+    } else {
+      el.innerHTML = `<span style="font-size:12px">·</span><span>${days[i]}</span>`;
+    }
+    cont.appendChild(el);
+  }
+}
+
+function setDiff(d, el) {
+  diff = d;
+  document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+// ══ GAME ══
+function startGame() {
+  document.getElementById('resultModal').classList.remove('show');
+  questions = Array.from({length: TOTAL_Q}, generate);
+  qi = 0; correct = 0; wrong = 0; xpEarned = 0;
+  showScreen('gameScreen');
+  showQuestion();
+}
+
+function showQuestion() {
+  if (qi >= questions.length) { finishGame(false); return; }
+  const q = questions[qi];
+  selectedAnswer = null;
+  hintUsed = false;
+
+  document.getElementById('eqPrompt').textContent = `FRÅGA ${qi + 1} / ${TOTAL_Q}`;
+  document.getElementById('progFill').style.width = (qi / TOTAL_Q * 100) + '%';
+  document.getElementById('gScore').textContent = xpEarned;
+  document.getElementById('hintBox').style.display = 'none';
+  document.getElementById('checkBtn').disabled = true;
+
+  // Equation display
+  document.getElementById('eqDisplay').innerHTML =
+    q.lhs.replace('x', `<span class="eq-unknown">x</span>`) +
+    ' = ' +
+    q.rhs.replace('x', `<span class="eq-unknown">x</span>`);
+
+  // Pan values — show expression, not resolved
+  updatePans(null, q);
+
+  // Scale neutral
+  const beam = document.getElementById('scaleBeam');
+  beam.className = 'scale-beam';
+
+  // Build token bank
+  const bank = document.getElementById('tokenBank');
+  bank.innerHTML = '';
+  makeChoices(q.answer).forEach(val => {
+    const btn = document.createElement('button');
+    btn.className = 'bank-token number';
+    btn.textContent = val;
+    btn.onclick = () => selectToken(val, btn, q);
+    bank.appendChild(btn);
+  });
+}
+
+function updatePans(xVal, q) {
+  const leftVal  = document.getElementById('leftVal');
+  const rightVal = document.getElementById('rightVal');
+
+  if (xVal === null) {
+    leftVal.textContent  = q.lhs.includes('x') ? '?' : q.lhsVal ? q.lhsVal(0) : '?';
+    rightVal.textContent = q.rhs.includes('x') ? '?' : q.rhsVal ? q.rhsVal(0) : '?';
+    // Show expression labels
+    leftVal.textContent  = q.lhs;
+    rightVal.textContent = q.rhs;
+    leftVal.style.fontSize  = '16px';
+    rightVal.style.fontSize = '16px';
+    leftVal.style.color  = 'var(--muted)';
+    rightVal.style.color = 'var(--muted)';
+  } else {
+    const lv = q.lhsVal(xVal);
+    const rv = typeof q.rhsVal === 'function' ? q.rhsVal(xVal) : q.rhsVal();
+    leftVal.textContent  = lv;
+    rightVal.textContent = rv;
+    leftVal.style.fontSize  = '28px';
+    rightVal.style.fontSize = '28px';
+
+    const beam = document.getElementById('scaleBeam');
+    if (lv === rv) {
+      beam.className = 'scale-beam balanced';
+      leftVal.style.color  = 'var(--green)';
+      rightVal.style.color = 'var(--green)';
+      document.getElementById('panLeft').classList.add('balanced-pan');
+      document.getElementById('panRight').classList.add('balanced-pan');
+    } else if (lv > rv) {
+      beam.className = 'scale-beam left-heavy';
+      leftVal.style.color  = 'var(--red)';
+      rightVal.style.color = 'var(--text)';
+      document.getElementById('panLeft').classList.remove('balanced-pan');
+      document.getElementById('panRight').classList.remove('balanced-pan');
+    } else {
+      beam.className = 'scale-beam right-heavy';
+      leftVal.style.color  = 'var(--text)';
+      rightVal.style.color = 'var(--red)';
+      document.getElementById('panLeft').classList.remove('balanced-pan');
+      document.getElementById('panRight').classList.remove('balanced-pan');
+    }
+  }
+}
+
+function selectToken(val, btn, q) {
+  // Deselect all
+  document.querySelectorAll('.bank-token').forEach(b => {
+    b.style.borderColor = ''; b.style.background = ''; b.style.color = 'var(--teal)';
+  });
+  btn.style.borderColor = 'var(--pink)';
+  btn.style.background  = 'rgba(255,110,180,0.15)';
+  btn.style.color       = 'var(--pink)';
+
+  selectedAnswer = val;
+  document.getElementById('checkBtn').disabled = false;
+  updatePans(val, q);
+  spawnParticles(val === q.answer);
+}
+
+function checkAnswer() {
+  const q = questions[qi];
+  if (selectedAnswer === null) return;
+
+  const isCorrect = selectedAnswer === q.answer;
+
+  if (isCorrect) {
+    correct++;
+    S.totalSolved++;
+    const bonus = hintUsed ? 0 : 5;
+    const pts = 15 + bonus;
+    xpEarned += pts;
+    showFeedback(true, `+${pts} XP ✓`);
+    spawnParticles(true);
+    document.getElementById('eqDisplay').innerHTML =
+      q.lhs.replace('x', `<span class="eq-solved">${q.answer}</span>`) +
+      ' = ' +
+      q.rhs.replace('x', `<span class="eq-solved">${q.answer}</span>`);
+    setTimeout(() => { qi++; showQuestion(); }, 900);
+  } else {
+    wrong++;
+    S.totalWrong = (S.totalWrong || 0) + 1;
+    showFeedback(false, `x = ${q.answer} ✗`);
+    // Shake beam
+    const beam = document.getElementById('scaleBeam');
+    beam.style.transition = 'none';
+    setTimeout(() => { beam.style.transition = ''; }, 300);
+    setTimeout(() => { qi++; showQuestion(); }, 1200);
+  }
+  S.totalAttempts = (S.totalAttempts || 0) + 1;
+}
+
+function showHint() {
+  const q = questions[qi];
+  const box = document.getElementById('hintBox');
+  box.textContent = '💡 ' + q.hint;
+  box.style.display = 'block';
+  hintUsed = true;
+}
+
+function finishGame(partial) {
+  // Update streak
+  const today = new Date().toDateString();
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (S.lastPlayDate !== today) {
+    S.dayStreak = S.lastPlayDate === yesterday ? S.dayStreak + 1 : 1;
+    S.lastPlayDate = today;
+    S.maxDayStreak = Math.max(S.maxDayStreak || 0, S.dayStreak);
+  }
+
+  const oldLevel = getLevel();
+  S.xp += xpEarned;
+  S.maxStreak = Math.max(S.maxStreak || 0, correct);
+  save();
+  const newLevel = getLevel();
+
+  const total = correct + wrong;
+  const pct = total > 0 ? Math.round(correct / total * 100) : 0;
+
+  document.getElementById('resEmoji').textContent = pct === 100 ? '💎' : pct >= 75 ? '🏆' : pct >= 50 ? '⭐' : '💪';
+  document.getElementById('resTitle').textContent = pct === 100 ? 'PERFEKT!' : pct >= 75 ? 'GRYMT!' : pct >= 50 ? 'BRA JOBBAT!' : 'FORTSÄTT TRÄNA!';
+  document.getElementById('resSub').textContent = pct === 100 ? 'Alla ekvationer lösta utan fel!' : `${correct} av ${total} rätt`;
+  document.getElementById('resCorrect').textContent = correct;
+  document.getElementById('resWrong').textContent = wrong;
+  document.getElementById('resXP').textContent = `⭐ +${xpEarned} XP INTJÄNAT`;
+
+  if (pct >= 75) launchConfetti();
+  document.getElementById('resultModal').classList.add('show');
+}
+
+// ══ FEEDBACK ══
+function showFeedback(ok, msg) {
+  const o = document.getElementById('feedbackOverlay');
+  const b = document.getElementById('feedbackBubble');
+  b.className = 'feedback-bubble ' + (ok ? 'correct' : 'wrong');
+  b.textContent = msg;
+  o.classList.add('show');
+  setTimeout(() => o.classList.remove('show'), 700);
+}
+
+function spawnParticles(ok) {
+  const emojis = ok ? ['✨','⭐','💫','✅','🎉'] : ['💢','❌'];
+  for (let i = 0; i < (ok ? 5 : 2); i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    p.style.left = (25 + Math.random() * 50) + 'vw';
+    p.style.top  = (25 + Math.random() * 40) + 'vh';
+    p.style.setProperty('--dx', (Math.random() * 120 - 60) + 'px');
+    p.style.setProperty('--dy', (-40 - Math.random() * 80) + 'px');
+    document.body.appendChild(p);
+    setTimeout(() => p.remove(), 700);
+  }
+}
+
+// ══ CONFETTI ══
+function launchConfetti() {
+  const cv = document.getElementById('confetti');
+  const ctx = cv.getContext('2d');
+  cv.width = window.innerWidth; cv.height = window.innerHeight;
+  const COLORS = ['#ff6eb4','#00e5c8','#ffe566','#c084fc','#4ade80','#ff5a7e'];
+  const ps = Array.from({length: 70}, () => ({
+    x: Math.random() * cv.width, y: -10,
+    vx: (Math.random() - 0.5) * 3, vy: 2 + Math.random() * 3,
+    color: COLORS[Math.floor(Math.random() * COLORS.length)],
+    size: 5 + Math.random() * 7, rot: Math.random() * 360, rv: (Math.random()-0.5)*6,
+  }));
+  let f = 0;
+  function draw() {
+    ctx.clearRect(0,0,cv.width,cv.height);
+    ps.forEach(p => {
+      ctx.save(); ctx.translate(p.x,p.y); ctx.rotate(p.rot*Math.PI/180);
+      ctx.fillStyle = p.color; ctx.fillRect(-p.size/2,-p.size/4,p.size,p.size/2);
+      ctx.restore();
+      p.x+=p.vx; p.y+=p.vy; p.rot+=p.rv; p.vy+=0.08;
+    });
+    if (++f < 130) requestAnimationFrame(draw);
+    else ctx.clearRect(0,0,cv.width,cv.height);
+  }
+  draw();
+}
+
+// ══ INIT ══
+updateHome();
+</script>
+</body>
+</html>
