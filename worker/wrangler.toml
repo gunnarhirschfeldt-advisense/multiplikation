@@ -1,0 +1,6 @@
+name = "mattekompisen-proxy"
+main = "index.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+# ANTHROPIC_KEY och ALLOWED_ORIGIN sätts som secrets via CLI, inte här

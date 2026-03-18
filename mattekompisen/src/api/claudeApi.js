@@ -1,19 +1,11 @@
-const API_URL = 'https://api.anthropic.com/v1/messages';
-
-function getApiKey() {
-  const key = import.meta.env.VITE_ANTHROPIC_API_KEY;
-  if (!key || key === 'din_nyckel_här') throw new Error('API_KEY_SAKNAS');
-  return key;
-}
+const PROXY_URL = import.meta.env.VITE_PROXY_URL;
 
 async function anropa(systemprompt, userprompt, maxTokens) {
-  const response = await fetch(API_URL, {
+  const response = await fetch(`${PROXY_URL}/v1/messages`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': getApiKey(),
       'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
     },
     body: JSON.stringify({
       model: 'claude-sonnet-4-6',

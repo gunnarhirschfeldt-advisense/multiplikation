@@ -127,6 +127,25 @@ Varje modul har en egen `MODUL_FRÅGE_SYSTEM`-konstant med domänspecifika regle
 - **AlgebraModule**: A-nivå kräver generell formel (inte bara nästa tal i följden)
 - **TaluppfattningModule**: A-nivå kräver systematisk genomgång + förklaring av VARFÖR metoden fungerar
 
+## Deploy
+
+### GitHub Pages
+Byggs via `.github/workflows/deploy.yml` vid push till `main` (med ändringar i `mattekompisen/`).
+Build-steget kräver GitHub Secret: `VITE_PROXY_URL` = Worker-URL.
+
+### Cloudflare Worker (`worker/`)
+Proxy som vidarebefordrar anrop till Anthropic API — API-nyckeln lagras aldrig i webbläsaren.
+```
+cd worker/
+npm install
+wrangler secret put ANTHROPIC_KEY     # klistra in Anthropic API-nyckel
+wrangler secret put ALLOWED_ORIGIN    # t.ex. https://gunnarhirschfeldt-advisense.github.io
+wrangler deploy
+```
+- **Lokal dev:** `wrangler dev` i `worker/`, sätt `VITE_PROXY_URL=http://localhost:8787` i `mattekompisen/.env.development`
+- **API-nyckel:** lagras som Worker-secret `ANTHROPIC_KEY`, exponeras aldrig i klientkod
+- **Ursprungskontroll:** Worker-secret `ALLOWED_ORIGIN` = `https://[användarnamn].github.io`
+
 ## Nästa steg
 
 **Alla planerade moduler är klara** (2026-03-17). Inga kvarvarande åtgärder i implementationsplanen.
