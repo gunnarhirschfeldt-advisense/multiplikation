@@ -26,7 +26,7 @@ Efter varje slutförd modul eller större förändring:
   - A-nivå: sammansatt_figur (L/U-form), omvänd_area, mönster_generalisering
   - SVG-figurer inline i bank + Claude-genererade; valideras i FigureRenderer
 - [x] Statistik & sannolikhet (`statistik-sannolikhet`) — klar 2026-03-17
-  - 10 frågor: SE1–SE4, SC1–SC4, SA1–SA2 | subtopics: diagram, lägesmått, sannolikhet
+  - 15 frågor: SE1–SE6, SC1–SC6, SA1–SA3 | subtopics: diagram, lägesmått, sannolikhet
   - `figure_svg: null` på alla frågor — data beskrivs i text (diagram är för komplexa för M/L-SVG)
 - [x] Algebra & mönster (`algebra-monster`) — klar 2026-03-17
   - 10 frågor: AE1–AE4, AC1–AC4, AA1–AA2 | subtopics: ekvation, mönster
