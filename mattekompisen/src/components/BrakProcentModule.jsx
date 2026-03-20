@@ -20,7 +20,7 @@ import LevelSuggestionModal from './LevelSuggestionModal';
 // ─── Module constants ─────────────────────────────────────────────────────────
 const STORAGE_KEY = 'progress_bråk_procent';
 
-const SUBTOPIC_KEYS = ['jämförelse', 'tallinje', 'omvandling', 'andel'];
+const SUBTOPIC_KEYS = ['jämförelse', 'tallinje', 'omvandling', 'andel', 'procent'];
 
 const INITIAL_PROGRESS = {
   levels: {
@@ -33,6 +33,7 @@ const INITIAL_PROGRESS = {
     tallinje:   { correct: 0, attempts: 0, lastSeen: null },
     omvandling: { correct: 0, attempts: 0, lastSeen: null },
     andel:      { correct: 0, attempts: 0, lastSeen: null },
+    procent:    { correct: 0, attempts: 0, lastSeen: null },
   },
   recentMistakes:     [],
   recentResults:      [],
@@ -47,6 +48,7 @@ const SUBTOPIC_NAMN = {
   tallinje:   'Tallinje',
   omvandling: 'Omvandling',
   andel:      'Andel',
+  procent:    'Procent',
 };
 
 const SUBTOPIC_ETIKETTER = {
@@ -54,6 +56,7 @@ const SUBTOPIC_ETIKETTER = {
   tallinje:   '📏 Tallinje',
   omvandling: '🔄 Omvandling',
   andel:      '📊 Andel',
+  procent:    '% Procent',
 };
 
 // ─── Bedömningsprompt ──────────────────────────────────────────────────────────

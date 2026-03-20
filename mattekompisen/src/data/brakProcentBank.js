@@ -145,4 +145,105 @@ export const BRAK_PROCENT_BANK = [
       'Ej godkänt: enbart decimalberäkning (5÷9≈0,556, 3÷7≈0,429) — ' +
       'uppgiften kräver resonemang om täljare/nämnares inbördes relation.',
   },
+
+  // ─── UTÖKAD BANK BP9–BP15 ─────────────────────────────────────────────────
+  {
+    id: 'BP9',
+    level: 'E',
+    subtopic: 'procent',
+    type: 'multiple_choice',
+    question: 'En tröja kostar 300 kr. Den är nedsatt med 10%. Vad kostar tröjan nu?',
+    figure_svg: null,
+    options: ['270 kr', '290 kr', '310 kr', '30 kr'],
+    correct_answer: '270 kr',
+    hint: 'Räkna ut 10% av 300 och dra bort det från priset.',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'BP10',
+    level: 'E',
+    subtopic: 'jämförelse',
+    type: 'multiple_choice',
+    question: 'Vilket tal är störst?',
+    figure_svg: null,
+    options: ['3/4', '2/3', '5/8', '7/12'],
+    correct_answer: '3/4',
+    hint: 'Försök göra om bråken till samma nämnare eller decimaler.',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'BP11',
+    level: 'E',
+    subtopic: 'omvandling',
+    type: 'multiple_choice',
+    question: 'Hur skriver man 0,4 som ett bråk i förenklad form?',
+    figure_svg: null,
+    options: ['2/5', '4/10', '1/4', '2/4'],
+    correct_answer: '2/5',
+    hint: 'Skriv 0,4 som 4/10 och förenkla sedan.',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'BP12',
+    level: 'C',
+    subtopic: 'procent',
+    type: 'open',
+    question: 'I en klass är 12 av 30 elever med i skolans idrottsklubb. Hur stor andel i procent är det? Förklara hur du räknade.',
+    figure_svg: null,
+    options: null,
+    correct_answer: '40%',
+    hint: 'Dela antalet i klubben med totala antalet elever och multiplicera med 100.',
+    evaluation_criteria:
+      'Eleven ska komma fram till 40%. Full poäng kräver att eleven visar beräkningen ' +
+      '(12/30 = 0,4 = 40%) eller förklarar hur andelen tas fram. ' +
+      'Acceptera olika räknevägar så länge metoden är korrekt.',
+  },
+  {
+    id: 'BP13',
+    level: 'C',
+    subtopic: 'tallinje',
+    type: 'open',
+    question: 'Placera talen 1/2, 0,3 och 75% i rätt ordning från minst till störst. Förklara hur du jämförde dem.',
+    figure_svg: null,
+    options: null,
+    correct_answer: '0,3 < 1/2 < 75%',
+    hint: 'Gör om alla tal till samma form — t.ex. decimaler — innan du jämför.',
+    evaluation_criteria:
+      'Korrekt ordning: 0,3 < 1/2 < 75% (dvs. 0,3 < 0,5 < 0,75). ' +
+      'C-poäng kräver att eleven visar hur de gjort talen jämförbara, t.ex. genom att omvandla ' +
+      'till decimaler eller procent. Enbart korrekt ordning utan förklaring ger E.',
+  },
+  {
+    id: 'BP14',
+    level: 'A',
+    subtopic: 'procent',
+    type: 'open',
+    question: 'En vara kostar 250 kr efter att priset höjts med 25%. Vad kostade varan innan höjningen? Förklara din metod.',
+    figure_svg: null,
+    options: null,
+    correct_answer: '200 kr',
+    hint: 'Det nya priset är 125% av det gamla. Vad är då 100%?',
+    evaluation_criteria:
+      'Korrekt svar är 200 kr. A-poäng kräver att eleven förstår och förklarar att 250 kr ' +
+      'motsvarar 125% och att man därför delar med 1,25 (eller räknar 250/125×100). ' +
+      'Eleven ska förklara VARFÖR metoden fungerar — att det ursprungliga priset är basen (100%) ' +
+      'och att man räknar baklänges. Enbart korrekt svar utan förklaring ger C.',
+  },
+  {
+    id: 'BP15',
+    level: 'A',
+    subtopic: 'jämförelse',
+    type: 'open',
+    question: 'Är 3/7 eller 4/9 närmast 1/2? Förklara utan att räkna om till decimaler.',
+    figure_svg: null,
+    options: null,
+    correct_answer: '4/9',
+    hint: 'Tänk på hur långt varje bråk är från hälften — hur stor är "skillnaden" i täljare och nämnare?',
+    evaluation_criteria:
+      'Korrekt svar är 4/9. A-poäng kräver ett resonemang utan decimalomvandling. ' +
+      'Accepterade metoder: (1) Jämföra med halva nämnaren: hälften av 7 är 3,5 → 3/7 är 0,5/7 under 1/2; ' +
+      'hälften av 9 är 4,5 → 4/9 är 0,5/9 under 1/2. Eftersom 0,5/9 < 0,5/7 är 4/9 närmast. ' +
+      '(2) Likvärdigt algebraiskt resonemang. Poängen ligger i att eleven kan jämföra avstånd från 1/2 ' +
+      'utan att konvertera till decimaler och förklarar VARFÖR metoden fungerar.',
+  },
 ];

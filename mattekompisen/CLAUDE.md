@@ -20,7 +20,7 @@ Efter varje slutförd modul eller större förändring:
 ## Modulstatus
 
 - [x] Bråk & procent (`brak-procent`) — klar
-  - 8 frågor: E1–E3, C1–C3, A1–A2 | subtopics: jämförelse, omvandling, tallinje, procent
+  - 15 frågor: E1–E3+BP9–BP11, C1–C3+BP12–BP13, A1–A3+BP14–BP15 | subtopics: jämförelse, omvandling, tallinje, andel, procent
 - [x] Geometri & mätning (`geometri-matning`) — klar 2026-03-17
   - 10 frågor: GE1–GE4, GC1–GC4, GA1–GA4 | subtopics: area_omkrets, vinklar, enhetsomvandling, skala
   - A-nivå: sammansatt_figur (L/U-form), omvänd_area, mönster_generalisering
