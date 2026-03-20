@@ -79,17 +79,13 @@ export const STATISTIK_BANK = [
     id: 'SC2',
     level: 'C',
     subtopic: 'lägesmått',
-    type: 'numeric',
-    question:
-      'Fyra personers antal husdjur är: 1, 3, 2, 6.\n' +
-      'En femte person tillkommer.\n' +
-      'Medelvärdet för alla fem ska bli 3.\n' +
-      'Hur många husdjur har den femte personen?',
+    type: 'open',
+    question: 'Två lag spelar brädspel fem omgångar. Lag A:s poäng: 2, 3, 4, 5, 36. Lag B:s poäng: 8, 9, 10, 11, 12. (1) Beräkna medelvärdet för varje lag. (2) Beräkna medianen för varje lag. (3) Vilket mått beskriver bäst hur lagen presterar mot varandra — och varför?',
     figure_svg: null,
     options: null,
-    correct_answer: '3',
-    hint: 'Fem personers summa vid medelvärde 3 = 5 × 3 = 15. Räkna ut vad som saknas.',
-    evaluation_criteria: null,
+    correct_answer: null,
+    hint: 'Ordna talen i storleksordning för att hitta medianen. Tänk på om något tal sticker ut.',
+    evaluation_criteria: 'Eleven ska: (1) beräkna medelvärde A = 50/5 = 10 och medelvärde B = 50/5 = 10 — de är lika, (2) beräkna median A = 4 och median B = 10, (3) argumentera för att medianen beskriver bättre eftersom 36 är ett extremvärde som drar upp medelvärdet för Lag A utan att spegla deras typiska prestation. Godkänt utan ordet "extremvärde" om resonemanget är korrekt. Delvisa poäng om (1) och (2) är rätt men (3) saknas.',
   },
   {
     id: 'SC3',

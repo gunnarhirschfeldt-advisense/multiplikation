@@ -60,9 +60,11 @@ Alla moduler delar samma grundschema:
 
 ### Claude API — `src/api/claudeApi.js`
 - **Anrop 1** `genereraFråga(prompt, customSystemPrompt?)` — max 600 tokens, returnerar JSON
-- **Anrop 2** `bedömSvar({question, correct_answer, evaluation_criteria, elevensSvar, recentMistakes})` — max 400 tokens
+- **Anrop 2** `bedömSvar({question, correct_answer, evaluation_criteria, elevensSvar, recentMistakes, level, systemPrompt?})` — max 400 tokens
+  - `level` ('E'|'C'|'A') skickas med i user-meddelandet för nivåanpassad feedback
+  - `systemPrompt` — modulens egna bedömningsprompt; faller tillbaka på intern fallback om null
+  - Returnerar JSON: `{ correct: bool, feedback: string, hint: string|null }`
 - JSON-rensning: strippar markdown-fences innan `JSON.parse`
-- Header `anthropic-dangerous-direct-browser-access: true` krävs för direktanrop från webbläsare
 
 ### SVG-figurer
 Claude genererar SVG-strängar inline i fråge-JSON (`figure_svg`).
@@ -120,12 +122,46 @@ src/data/moduler.js          ← MODULER-lista med implementerad-flagga
 3. Rad i `moduler.js` med `implementerad: true`
 4. Route i `App.jsx`
 
+### Källmaterial — Nationella prov
+Frågepromptarna kalibreras mot nationella prov i matematik åk 6 (NP 2017, 2019).
+
+**Kunskapskrav E/C/A:**
+- E: Direktsvar eller ett-stegsberäkning, ingen krav på förklaring
+- C: Flerstegsproblem, representationsbyte, förklaring av hur delar hänger ihop
+- A: Systematiskt resonemang, generalisering, förklaring av VARFÖR metoden fungerar
+
+**Few-shot-exempel per modul (inbäddade i `byggPrompt`):**
+- Bråk/procent E: "Hur många procent av 200 planeter har ringar om 40 har ringar?" → 20%
+- Bråk/procent C: "Viktor och Leo blandar rymddryck — behöver 5,4 l, recept ger 9 dl. Hur många satser?" (proportionsförståelse)
+- Bråk/procent A: "Förklara utan decimalomvandling varför 5/9 är närmast hälften jämfört med 3/7"
+- Geometri E: Beräkna area av rektangel 7 cm × 4 cm
+- Geometri C: Sammansatt figur (L-form), delning i delar
+- Geometri A: Omvänd area — hitta sida när area och ena sida ges, förklara metod
+- Statistik E: Beräkna medelvärde av fem tal
+- Statistik C: Jämför medelvärde vs median för två lag med extremvärde
+- Statistik A: Argumentera vilket lägesmått beskriver bäst — systematisk genomgång
+- Algebra E: Beräkna y=3x+2 för x=5
+- Algebra C: Hitta mönster i talföljd och beräkna term
+- Algebra A: Generell formel för godtyckligt n — enbart korrekt talföljd ger inte A-poäng
+- Taluppfattning E: "100·49=?", "3,05+2,45=?", "6·0,3=?", "160/20=?"
+- Taluppfattning C: "30 elever ska ha 1,5 hg godis var. Hur många kg?" (enhetsomvandling + multiplikation)
+- Taluppfattning A: "Du vet att 235/50=4,7. Hur mycket är 235/0,5?" (sambandet nämnare×100 → svar÷100)
+
 ### Pedagogiska systempromptar per modul
-Varje modul har en egen `MODUL_FRÅGE_SYSTEM`-konstant med domänspecifika regler:
+Varje modul har två systemprompt-konstanter:
+
+**Frågegenerering** (`MODUL_FRÅGE_SYSTEM`) — domänspecifika regler för Claude att generera frågor:
 - **GeometriModule**: SVG-regler, viewBox 0 0 300 220, tillåtna path-kommandon M/L
 - **StatistikModule**: `figure_svg: null` alltid — data beskrivs i text
 - **AlgebraModule**: A-nivå kräver generell formel (inte bara nästa tal i följden)
 - **TaluppfattningModule**: A-nivå kräver systematisk genomgång + förklaring av VARFÖR metoden fungerar
+
+**Bedömning** (`SYSTEM_PROMPT`) — gemensam struktur för alla moduler, rad 1 anger ämnesområde:
+- Returnerar JSON med `correct`, `feedback`, `hint` (hint=null om correct=true)
+- Feedback: max 3 meningar, uppmuntrande, börjar med vad eleven gjort rätt
+- Hint: en mening som pekar mot rätt tankesätt utan att avslöja svaret
+- Nivåanpassning via `level`-parametern: E=enkel bekräftelse, C=lyft fram samband, A=kräv generalisering
+- Skickas från modul → QuestionCard (prop `systemPrompt`) → `bedömSvar`
 
 ## Deploy
 

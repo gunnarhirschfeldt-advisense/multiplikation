@@ -102,12 +102,16 @@ function OpenAnswer({ onSkicka, laddar, visaResultat }) {
  * @param {function} onSvarat(correct, mistakeSummary)
  * @param {string[]} recentMistakes     – passed to Claude for context
  * @param {object}   subtopicEtiketter  – { subtopicKey: 'Label' }
+ * @param {string}   level              – elevens nivå ('E'|'C'|'A'), skickas till bedömSvar
+ * @param {string}   systemPrompt       – modulens bedömningsprompt, skickas till bedömSvar
  */
 export default function QuestionCard({
   fråga,
   onSvarat,
   recentMistakes = [],
   subtopicEtiketter = {},
+  level = null,
+  systemPrompt = null,
 }) {
   const [vald, setVald]           = useState(null);
   const [visaResultat, setVisa]   = useState(false);
@@ -124,6 +128,8 @@ export default function QuestionCard({
           evaluation_criteria: fråga.evaluation_criteria,
           elevensSvar:         svar,
           recentMistakes,
+          level,
+          systemPrompt,
         });
         setFeedback(res);
         setVisa(true);

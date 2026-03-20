@@ -46,7 +46,7 @@ export const ALGEBRA_BANK = [
     type: 'multiple_choice',
     question: 'Talserie: 2, 5, 8, 11, 14, …\nVilket tal kommer härnäst?',
     figure_svg: null,
-    options: ['15', '16', '17', '18'],
+    options: ['14', '16', '17', '18'],
     correct_answer: '17',
     hint: 'Hur mycket ökar talen varje steg?',
     evaluation_criteria: null,
@@ -122,10 +122,10 @@ export const ALGEBRA_BANK = [
     correct_answer: 'y=14. Sambandet: y = 3x + 2.',
     hint: 'Hur förändras y när x ökar med 1? Vad är y när x=0?',
     evaluation_criteria:
-      'Eleven ska: (1) beräkna y=14 när x=4, ' +
-      '(2) beskriva sambandet ("y är alltid 2 mer än 3 gånger x", dvs y=3x+2 eller likvärdig beskrivning). ' +
-      'Godkänt utan algebraisk notation om relationen beskrivs korrekt med ord. ' +
-      'Eleven ska förklara hur delarna hänger ihop — inte bara räkna nästa steg.',
+      'Eleven ska: (1) beräkna y=14 när x=4 — krav för godkänt. ' +
+      '(2) Beskriva sambandet — godkänn både algebraisk form (y=3x+2) ' +
+      'och beskrivning med ord ("varje gång x ökar med 1 ökar y med 3, ' +
+      'och när x är 1 är y 5"). Kräv inte algebraisk notation.',
   },
 
   // ─── NIVÅ A ───────────────────────────────────────────────────────────────

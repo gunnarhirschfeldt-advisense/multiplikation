@@ -20,8 +20,8 @@ export default function FeedbackCard({ korrekt, feedback, hint, rättSvar, visar
         </p>
       )}
       {!korrekt && hint && (
-        <p className="text-amber-500 text-sm">
-          <strong>Tips:</strong> {hint}
+        <p className="mt-2 text-sm text-blue-700 italic">
+          💡 {hint}
         </p>
       )}
     </div>

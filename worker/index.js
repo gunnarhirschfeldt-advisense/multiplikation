@@ -38,7 +38,7 @@ function corsResponse(body, status) {
     headers: {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, anthropic-version',
       'Access-Control-Allow-Methods': 'POST, OPTIONS',
     },
   });

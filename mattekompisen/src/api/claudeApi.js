@@ -58,28 +58,23 @@ export async function genereraFråga(userPrompt, customSystemPrompt = null) {
 }
 
 // ─── Anrop 2: Svarsbedömning (open-frågor) ────────────────────────────────────
-const BEDÖMNING_SYSTEM = `Du är en tålmodig mattelärare för åk 6 i Sverige.
+// Används som fallback om ingen systemPrompt skickas från modulen
+const BEDÖMNING_SYSTEM_FALLBACK = `Du är en tålmodig mattelärare för åk 6 i Sverige.
 Returnera ENDAST giltig JSON utan markdown:
 {
   "correct": boolean,
-  "feedback": "string (max 2 meningar, uppmuntrande, på svenska)",
-  "hint": "string (konkret nästa steg om fel, tom sträng om rätt)",
-  "mistakeSummary": "string (en mening om vad som verkar vara missförståndet, tom sträng om rätt)"
+  "feedback": "string (max 3 meningar, uppmuntrande, på svenska)",
+  "hint": "string eller null"
 }`;
 
-export async function bedömSvar({ question, correct_answer, evaluation_criteria, elevensSvar, recentMistakes }) {
-  const mistakesText =
-    recentMistakes && recentMistakes.length > 0
-      ? recentMistakes.join('; ')
-      : 'inga registrerade';
+export async function bedömSvar({ question, correct_answer, evaluation_criteria, elevensSvar, recentMistakes, level, systemPrompt = null }) {
+  const userMessage = `
+Fråga: ${question}
+Rätt svar / bedömningskriterier: ${evaluation_criteria || correct_answer}
+Elevens nivå: ${level}
+Elevens svar: ${elevensSvar}
+${recentMistakes?.length ? `Tidigare misstag: ${recentMistakes.join(', ')}` : ''}
+`.trim();
 
-  const prompt = `Uppgift: ${question}
-Rätt svar: ${correct_answer}
-Bedömningskriterier: ${evaluation_criteria ?? 'Matematiskt korrekt svar'}
-Elevsvar: ${elevensSvar}
-Elevens tidigare misstag på detta subtopic: ${mistakesText}
-Bedöm om resonemanget är matematiskt korrekt enligt kriterierna.
-Om fel: fyll i mistakeSummary med vad som verkar vara kärnproblemet.`;
-
-  return anropa(BEDÖMNING_SYSTEM, prompt, 400);
+  return anropa(systemPrompt ?? BEDÖMNING_SYSTEM_FALLBACK, userMessage, 400);
 }

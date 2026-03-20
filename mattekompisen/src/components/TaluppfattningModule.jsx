@@ -6,7 +6,6 @@ import {
   getNextQuestionFromBank,
   uppdateraEfterSvar,
   checkLevelChange,
-  byggFrågeprompt,
 } from '../utils/adaptiveEngine';
 import { genereraFråga } from '../api/claudeApi';
 import { TALUPPFATTNING_BANK } from '../data/taluppfattningBank';
@@ -88,15 +87,69 @@ A-nivå: Systematiskt resonemang, komplex flerastegsproblem.
   - Kräv explicit att eleven motiverar — enbart korrekt svar ger inte A-nivåpoäng
   - evaluation_criteria ska ange vad ett välutvecklat resonemang innehåller`;
 
-const FRÅGE_EXTRA = `
-Instruktioner:
-- Belöna tydlig lösningsgång — metoden är viktigare än exakt svar på C/A-nivå
-- Variera kontexterna (butik, resor, mat, sport, befolkning)
-- A-nivå kräver systematisk genomgång och förklaring av varför metoden fungerar
-- evaluation_criteria för open-frågor ska explicit ange vad delsteg förväntas`;
+// ─── Bedömningsprompt ──────────────────────────────────────────────────────────
+const SYSTEM_PROMPT = `Du är en varm och uppmuntrande matematiklärare för elever i årskurs 6 (ca 12 år).
+Bedöm elevens svar om taluppfattning och aritmetik och ge pedagogisk feedback på svenska.
+Returnera alltid giltig JSON i exakt detta format:
+{"correct": true/false, "feedback": "...", "hint": null/"..."}
 
+BEDÖMNINGSPRINCIP — positiv poängsättning:
+Lyft fram förtjänster i elevens lösning. En elev som kommit en bit på väg
+mot rätt svar ska få erkännande för det hen visat, inte bara kritik för felet.
+
+NIVÅKRAV (baserat på nationella provens kunskapskrav):
+- E: Eleven identifierar rätt svar, använder en fungerande metod i ett steg.
+  Enkla resonemang kopplade till konkreta exempel. Inget krav på förklaring.
+- C: Eleven visar god kunskap om matematiska begrepp och samband. Kan hantera
+  flerstegsproblem med decimaltal och procent. För utvecklade resonemang —
+  förklarar hur delar hänger ihop, inte bara svarar.
+- A: Eleven ser och beskriver generella samband. För välutvecklade och
+  systematiska resonemang som täcker alla delar av en frågeställning.
+  Lyfter blicken och förklarar det matematiska sambandet bakom svaret —
+  inte bara ger ett svar. Godkänn INTE A-svar som bara räknar utan att
+  förklara varför metoden fungerar.
+
+FEEDBACK-REGLER (max 3 meningar):
+- Börja alltid med vad eleven gör rätt, även vid fel svar
+- Förklara kort vad som saknas med enkla ord för en 12-åring
+- Avsluta med ett konkret nästa steg eller en fråga som hjälper vidare
+- Använd aldrig: tyvärr, fel, felaktigt, inte rätt
+- Använd gärna: nästan, bra start, du är på rätt spår, prova att tänka på
+
+HINT (bara om correct=false, annars null):
+En kort ledtråd som pekar mot rätt tankesätt utan att avslöja svaret. Max en mening.
+
+NIVÅANPASSNING utifrån elevens nivå:
+- E-nivå: bekräfta rätt svar och beröm konkret observation. Inga höga krav på förklaring.
+- C-nivå: lyft fram om eleven förklarar sambandet. Uppmuntra mer om det saknas.
+- A-nivå: efterfråga generalisering om den saknas. Bekräfta systematiskt resonemang.
+  Godkänn INTE A-svar som bara ger rätt svar utan att förklara varför metoden fungerar.
+
+TIDIGARE MISSTAG: Om angivna — koppla feedbacken till mönstret om det är relevant.`;
+
+// ─── Frågeprompt med few-shot-exempel från NP ─────────────────────────────────
 function byggPrompt(progress) {
-  return byggFrågeprompt(progress, SUBTOPIC_KEYS) + FRÅGE_EXTRA;
+  const { currentLevel: level, recentMistakes } = progress;
+  const subtopic = SUBTOPIC_KEYS
+    .slice()
+    .sort((a, b) => {
+      const st = progress.subtopics;
+      return (st[a].correct / Math.max(st[a].attempts, 1)) - (st[b].correct / Math.max(st[b].attempts, 1));
+    })[0];
+  const mistakesText = recentMistakes?.length > 0
+    ? `Eleven har nyligen haft problem med: ${recentMistakes.join(', ')}. `
+    : '';
+  const examples = {
+    E: 'Exempel E-uppgifter (nationellt prov): "100·49=?", "3,05+2,45=?", "6·0,3=?", "160/20=?" — direkt beräkning utan hjälpmedel, ett steg.',
+    C: 'Exempel C-uppgift (nationellt prov): "30 elever ska ha 1,5 hg godis var. Hur många kg ska köpas?" — enhetsomvandling + multiplikation i flera steg, visa hur.',
+    A: 'Exempel A-uppgift (nationellt prov): "Du vet att 235/50=4,7. Hur mycket är 235/0,5?" — eleven måste inse att nämnaren är 100 gånger mindre → svaret är 100 gånger större = 470. Kräver förklaring av sambandet.',
+  };
+  return `${mistakesText}Generera en uppgift om ${subtopic} på ${level}-nivå för åk 6.
+${examples[level]}
+Kontext: använd vardagliga svenska sammanhang (mat, sport, shopping, skolan, befolkning).
+figure_svg: null för alla taluppfattning/aritmetik-uppgifter.
+${level === 'A' ? 'OBS: A-nivå KRÄVER att eleven förklarar ett matematiskt samband eller varför metoden fungerar — inte bara räknar ut svaret.' : ''}
+Returnera JSON: {id, level, subtopic, type, question, figure_svg, options, correct_answer, hint, evaluation_criteria}`;
 }
 
 function hämtaFallback(level) {
@@ -186,8 +239,7 @@ export default function TaluppfattningModule({ modul }) {
     setProgress((latest) => { laddaNästaFråga(latest); return latest; });
   }
 
-  const apiKeyMissing = !import.meta.env.VITE_ANTHROPIC_API_KEY ||
-    import.meta.env.VITE_ANTHROPIC_API_KEY === 'din_nyckel_här';
+  const apiKeyMissing = !import.meta.env.VITE_PROXY_URL;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
@@ -238,8 +290,8 @@ export default function TaluppfattningModule({ modul }) {
         <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 text-sm text-amber-700 flex gap-2">
           <span>⚠️</span>
           <span>
-            <strong>API-nyckel saknas.</strong> Redovisningsfrågor och AI-genererade frågor
-            kräver <code className="bg-amber-100 px-1 rounded">VITE_ANTHROPIC_API_KEY</code> i .env-filen.
+            <strong>Proxy saknas.</strong> Redovisningsfrågor och AI-genererade frågor
+            kräver att <code className="bg-amber-100 px-1 rounded">VITE_PROXY_URL</code> är satt.
           </span>
         </div>
       )}
@@ -260,6 +312,8 @@ export default function TaluppfattningModule({ modul }) {
             onSvarat={hanteraSvarat}
             recentMistakes={progress.recentMistakes}
             subtopicEtiketter={SUBTOPIC_ETIKETTER}
+            level={progress.currentLevel}
+            systemPrompt={SYSTEM_PROMPT}
           />
           {svaratPåAktiv && (
             <button

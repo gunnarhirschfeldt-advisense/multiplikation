@@ -41,11 +41,11 @@ export const TALUPPFATTNING_BANK = [
     level: 'E',
     subtopic: 'rimlighetsbedömning',
     type: 'multiple_choice',
-    question: 'Vilket uttryck ger det MINSTA värdet?\nAnvänd överslagsräkning.',
+    question: 'Vilket uttryck ger det MINSTA värdet? Använd överslagsräkning.',
     figure_svg: null,
-    options: ['198 × 3', '200 × 3', '99 × 6', '100 × 6'],
-    correct_answer: '198 × 3',
-    hint: 'Avrunda och jämför: 200×3=600, 100×6=600, 198×3 är strax under 600…',
+    options: ['198 × 4', '51 × 8', '11 × 31', '99 × 3'],
+    correct_answer: '99 × 3',
+    hint: 'Avrunda varje tal till närmaste hundra eller tiotal och jämför.',
     evaluation_criteria: null,
   },
 
@@ -97,30 +97,22 @@ export const TALUPPFATTNING_BANK = [
     correct_answer: 'Ungefär 6%.',
     hint: 'Dela Göteborgs invånare med Sveriges totala befolkning.',
     evaluation_criteria:
-      'Eleven ska: (1) beräkna 600 000 / 10 000 000 = 0,06 = 6%, ' +
-      '(2) förklara beräkningen. ' +
-      'Godkänt svar: 6%. ' +
-      'Välutvecklat: eleven förklarar att de delar stadens invånare med landets och ' +
-      'visar hur de växlar mellan representationerna (del / helhet = procent).',
+      'Eleven ska: (1) dela Göteborgs invånare med Sveriges befolkning, ' +
+      '(2) få ett svar nära 6% — godkänn svar mellan 5% och 7% om ' +
+      'beräkningsgången visas. Godkänn "ungefär 6%" och liknande ' +
+      'avrundningar. Exakt svar är 6%.',
   },
   {
     id: 'TC4',
     level: 'C',
     subtopic: 'rimlighetsbedömning',
     type: 'open',
-    question:
-      'En elev påstår att 4,8 × 52 ≈ 250.\n\n' +
-      'Är det ett rimligt svar?\n' +
-      'Visa med överslagsräkning och förklara hur du bedömer rimligheten.',
+    question: 'En elev påstår att 3,2 × 47 ≈ 200. Är det ett rimligt svar? Visa med överslagsräkning och förklara hur du bedömer rimligheten.',
     figure_svg: null,
     options: null,
-    correct_answer: 'Rimligt men något lågt — 5 × 52 = 260, och 4,8 × 52 är strax under.',
-    hint: 'Avrunda 4,8 till 5 och beräkna 5 × 50.',
-    evaluation_criteria:
-      'Eleven ska: (1) avrunda: 5 × 50 = 250 (rimligt), ' +
-      '(2) konstatera att 4,8 × 52 är nära 5 × 52 = 260 och strax under, ' +
-      '(3) bedöma 250 som rimligt men något lågt. ' +
-      'Eleven ska visa mellanstegen i överslagsräkningen.',
+    correct_answer: null,
+    hint: 'Avrunda 3,2 och 47 till enkla tal och räkna.',
+    evaluation_criteria: 'Godkänt (C-nivå): Eleven avrundar båda talen (t.ex. 3 × 50 = 150 eller 3 × 47 = 141) och drar slutsatsen att 200 är för högt — inte rimligt. Godkänn svar som visar avrundning + korrekt slutsats. Exakt svar är 150,4. Välutvecklat (A-nivå, ej krav här): eleven förklarar åt vilket håll avrundningsfelen drar och varför 200 är klart för högt.',
   },
 
   // ─── NIVÅ A ───────────────────────────────────────────────────────────────

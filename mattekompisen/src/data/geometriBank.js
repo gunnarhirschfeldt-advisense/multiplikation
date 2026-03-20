@@ -59,6 +59,19 @@ export const GEOMETRI_BANK = [
     evaluation_criteria: null,
   },
 
+  {
+    id: 'GE5',
+    level: 'E',
+    subtopic: 'koordinater',
+    type: 'open',
+    question: 'Ett koordinatsystem har x-axel (vågrätt) och y-axel (lodrätt). Punkten A ligger på koordinaterna (3, 5). Beskriv var punkten A finns: hur långt till höger och hur långt uppåt från origo (0,0)?',
+    figure_svg: null,
+    options: null,
+    correct_answer: null,
+    hint: 'Det första talet (3) visar hur långt åt höger. Det andra talet (5) visar hur långt uppåt.',
+    evaluation_criteria: 'Eleven ska: (1) ange att punkten är 3 steg åt höger, (2) ange att punkten är 5 steg uppåt. Godkänt om båda riktningarna anges korrekt, oavsett exakt formulering.',
+  },
+
   // ─── NIVÅ C ───────────────────────────────────────────────────────────────
   {
     id: 'GC1',
