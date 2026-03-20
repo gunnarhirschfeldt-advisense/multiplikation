@@ -29,7 +29,7 @@ Efter varje slutförd modul eller större förändring:
   - 15 frågor: SE1–SE6, SC1–SC6, SA1–SA3 | subtopics: diagram, lägesmått, sannolikhet
   - `figure_svg: null` på alla frågor — data beskrivs i text (diagram är för komplexa för M/L-SVG)
 - [x] Algebra & mönster (`algebra-monster`) — klar 2026-03-17
-  - 10 frågor: AE1–AE4, AC1–AC4, AA1–AA2 | subtopics: ekvation, mönster
+  - 15 frågor: AE1–AE6, AC1–AC6, AA1–AA3 | subtopics: ekvation, mönster
   - A-nivå kräver generell formel för godtyckligt n — "enbart korrekt talföljd ger inte A-poäng"
 - [x] Taluppfattning & aritmetik (`taluppfattning-aritmetik`) — klar 2026-03-17
   - 15 frågor: TE1–TE6, TC1–TC6, TA1–TA3 | subtopics: aritmetik, stora_tal, rimlighetsbedömning

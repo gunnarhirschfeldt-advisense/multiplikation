@@ -175,4 +175,106 @@ export const ALGEBRA_BANK = [
       'A-nivå: eleven inser att det handlar om prövning och förklarar logiken bakom. ' +
       'Enbart korrekt svar utan ekvation och förklaring ger inte A-nivåpoäng.',
   },
+
+  // ─── UTÖKAD BANK AE5–AE6, AC5–AC6, AA3 ──────────────────────────────────
+  {
+    id: 'AE5',
+    level: 'E',
+    subtopic: 'ekvation',
+    type: 'multiple_choice',
+    question: 'Lös ekvationen: x − 9 = 14\nVad är x?',
+    figure_svg: null,
+    options: ['5', '23', '9', '14'],
+    correct_answer: '23',
+    hint: 'Vad behöver du addera till 9 för att få 14? Lägg till 9 på båda sidor.',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'AE6',
+    level: 'E',
+    subtopic: 'mönster',
+    type: 'multiple_choice',
+    question:
+      'Talserie: 100, 90, 80, 70, …\n' +
+      'Vilket tal kommer härnäst?',
+    figure_svg: null,
+    options: ['50', '55', '60', '65'],
+    correct_answer: '60',
+    hint: 'Hur mycket minskar talen varje steg?',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'AC5',
+    level: 'C',
+    subtopic: 'ekvation',
+    type: 'open',
+    question:
+      'Två vänner delar på kostnaden för en present.\n' +
+      'Den ena betalar 40 kr mer än den andra.\n' +
+      'Totalt kostar presenten 180 kr.\n\n' +
+      'Skriv en ekvation och räkna ut hur mycket varje person betalar.\n' +
+      'Visa hur du tänker.',
+    figure_svg: null,
+    options: null,
+    correct_answer:
+      'Den ena betalar 70 kr, den andra 110 kr. ' +
+      'Ekvation: x + (x + 40) = 180 → 2x + 40 = 180 → x = 70.',
+    hint: 'Låt x vara den lägre summan. Den andra betalar x + 40.',
+    evaluation_criteria:
+      'Eleven ska: (1) definiera variabel, t.ex. x = lägre summa, ' +
+      '(2) skriva ekvation: x + (x+40) = 180, ' +
+      '(3) lösa: 2x = 140, x = 70, ' +
+      '(4) svara att personerna betalar 70 kr och 110 kr. ' +
+      'C-poäng kräver korrekt ekvation och fullständig lösningsgång. ' +
+      'Acceptera andra korrekta variabelval om ekvationen är logisk.',
+  },
+  {
+    id: 'AC6',
+    level: 'C',
+    subtopic: 'mönster',
+    type: 'open',
+    question:
+      'En tabell visar antal kakel på en vägg:\n' +
+      'Rad 1: 3 kakel, Rad 2: 6 kakel, Rad 3: 9 kakel.\n\n' +
+      'a) Hur många kakel finns på rad 7?\n' +
+      'b) Beskriv sambandet mellan radnummer och antal kakel med ord eller formel.',
+    figure_svg: null,
+    options: null,
+    correct_answer: 'a) 21 kakel. b) Antal kakel = 3 × radnummer (K = 3n).',
+    hint: 'Vad är mönstret? Hur hänger radnumret ihop med antalet kakel?',
+    evaluation_criteria:
+      'Del a: 3 × 7 = 21 — krav för godkänt. ' +
+      'Del b: C-poäng kräver att eleven beskriver sambandet — ' +
+      'acceptera "antal kakel är tre gånger radnumret", K = 3n, eller likvärdig formulering. ' +
+      'Kräv inte algebraisk notation om beskrivningen med ord är korrekt och tydlig.',
+  },
+  {
+    id: 'AA3',
+    level: 'A',
+    subtopic: 'mönster',
+    type: 'open',
+    question:
+      'En trappa byggs av kvadratiska stenar med sidan 1 m:\n' +
+      'Steg 1: 1 sten, Steg 2: 3 stenar totalt, Steg 3: 6 stenar totalt.\n\n' +
+      'a) Hur många stenar totalt på steg 10?\n' +
+      'b) Skriv en formel för antal stenar på steg n.\n' +
+      'c) Förklara varför formeln fungerar — vad händer geometriskt för varje nytt steg?\n' +
+      'd) Steg k har 120 stenar. Vilket steg är det? Visa hur du löser det.',
+    figure_svg: null,
+    options: null,
+    correct_answer:
+      'a) 55 stenar. b) S = n(n+1)/2. c) Varje nytt steg n tillför n stenar — ' +
+      'summan är en triangeltalsserie. d) n(n+1)/2 = 120 → n(n+1) = 240 → n = 15 (15×16=240).',
+    hint: 'Gör en tabell: steg 1→1, 2→3, 3→6, 4→10. Vad ökar för varje steg? Kan du se ett mönster i skillnaderna?',
+    evaluation_criteria:
+      'Del a: S(10) = 10×11/2 = 55 — krav för godkänt. ' +
+      'Del b: A-nivå kräver formel S = n(n+1)/2 eller likvärdig — ' +
+      'enbart beskrivning av nästa steg ger C-poäng. ' +
+      'Del c: eleven ska förklara att steg n tillför exakt n stenar och att ' +
+      'summan därför är 1+2+3+…+n = n(n+1)/2. ' +
+      'Del d: eleven ska sätta upp n(n+1)/2 = 120, lösa n(n+1) = 240 och ' +
+      'via prövning eller resonemang hitta n=15. ' +
+      'Fullständig A-nivå kräver korrekt formel, geometrisk förklaring och lösning av del d. ' +
+      'Enbart korrekt svar på a och b utan förklaring ger inte A-nivåpoäng.',
+  },
 ];
