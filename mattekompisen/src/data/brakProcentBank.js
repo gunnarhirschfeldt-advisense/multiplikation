@@ -146,9 +146,9 @@ export const BRAK_PROCENT_BANK = [
       'uppgiften kräver resonemang om täljare/nämnares inbördes relation.',
   },
 
-  // ─── UTÖKAD BANK BP9–BP15 ─────────────────────────────────────────────────
+  // ─── UTÖKAD BANK E4–E6, C4–C5, A4–A5 ────────────────────────────────────
   {
-    id: 'BP9',
+    id: 'E4',
     level: 'E',
     subtopic: 'procent',
     type: 'multiple_choice',
@@ -160,7 +160,7 @@ export const BRAK_PROCENT_BANK = [
     evaluation_criteria: null,
   },
   {
-    id: 'BP10',
+    id: 'E5',
     level: 'E',
     subtopic: 'jämförelse',
     type: 'multiple_choice',
@@ -172,7 +172,7 @@ export const BRAK_PROCENT_BANK = [
     evaluation_criteria: null,
   },
   {
-    id: 'BP11',
+    id: 'E6',
     level: 'E',
     subtopic: 'omvandling',
     type: 'multiple_choice',
@@ -184,9 +184,9 @@ export const BRAK_PROCENT_BANK = [
     evaluation_criteria: null,
   },
   {
-    id: 'BP12',
+    id: 'C4',
     level: 'C',
-    subtopic: 'procent',
+    subtopic: 'andel',
     type: 'open',
     question: 'I en klass är 12 av 30 elever med i skolans idrottsklubb. Hur stor andel i procent är det? Förklara hur du räknade.',
     figure_svg: null,
@@ -199,7 +199,7 @@ export const BRAK_PROCENT_BANK = [
       'Acceptera olika räknevägar så länge metoden är korrekt.',
   },
   {
-    id: 'BP13',
+    id: 'C5',
     level: 'C',
     subtopic: 'tallinje',
     type: 'open',
@@ -214,9 +214,9 @@ export const BRAK_PROCENT_BANK = [
       'till decimaler eller procent. Enbart korrekt ordning utan förklaring ger E.',
   },
   {
-    id: 'BP14',
+    id: 'A4',
     level: 'A',
-    subtopic: 'procent',
+    subtopic: 'andel',
     type: 'open',
     question: 'En vara kostar 250 kr efter att priset höjts med 25%. Vad kostade varan innan höjningen? Förklara din metod.',
     figure_svg: null,
@@ -230,7 +230,7 @@ export const BRAK_PROCENT_BANK = [
       'och att man räknar baklänges. Enbart korrekt svar utan förklaring ger C.',
   },
   {
-    id: 'BP15',
+    id: 'A5',
     level: 'A',
     subtopic: 'jämförelse',
     type: 'open',
