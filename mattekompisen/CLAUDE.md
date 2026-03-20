@@ -22,7 +22,7 @@ Efter varje slutförd modul eller större förändring:
 - [x] Bråk & procent (`brak-procent`) — klar
   - 15 frågor: E1–E6, C1–C5, A1–A5 | subtopics: jämförelse, omvandling, tallinje, andel, procent
 - [x] Geometri & mätning (`geometri-matning`) — klar 2026-03-17
-  - 10 frågor: GE1–GE4, GC1–GC4, GA1–GA4 | subtopics: area_omkrets, vinklar, enhetsomvandling, skala
+  - 16 frågor: GE1–GE7, GC1–GC6, GA1–GA5 | subtopics: area_omkrets, vinklar, enhetsomvandling, skala, koordinater
   - A-nivå: sammansatt_figur (L/U-form), omvänd_area, mönster_generalisering
   - SVG-figurer inline i bank + Claude-genererade; valideras i FigureRenderer
 - [x] Statistik & sannolikhet (`statistik-sannolikhet`) — klar 2026-03-17

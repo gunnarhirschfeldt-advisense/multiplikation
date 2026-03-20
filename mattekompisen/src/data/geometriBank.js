@@ -299,4 +299,99 @@ export const GEOMETRI_BANK = [
       'A-nivå kräver att eleven formulerar en GENERELL REGEL för godtyckligt n ' +
       'och förklarar strategin med ord. Enbart beräkning av nästa steg ger inte A-nivåpoäng.',
   },
+
+  // ─── UTÖKAD BANK GE6–GE7, GC5–GC6, GA5 ──────────────────────────────────
+  {
+    id: 'GE6',
+    level: 'E',
+    subtopic: 'area_omkrets',
+    type: 'multiple_choice',
+    question: 'En rektangel har omkretsen 24 cm och bredden 4 cm. Hur lång är den andra sidan?',
+    figure_svg: null,
+    options: ['8 cm', '6 cm', '10 cm', '16 cm'],
+    correct_answer: '8 cm',
+    hint: 'Omkrets = 2 × (längd + bredd). Sätt in det du vet och lös ut längden.',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'GE7',
+    level: 'E',
+    subtopic: 'vinklar',
+    type: 'multiple_choice',
+    question: 'Hur stor är den tredje vinkeln i en triangel om de två andra är 55° och 80°?',
+    figure_svg: `<svg width="100%" viewBox="0 0 300 220" xmlns="http://www.w3.org/2000/svg">
+  <path d="M 50 180 L 250 180 L 150 50 Z" fill="#f0f0f0" stroke="#555" stroke-width="1.5"/>
+  <text x="44" y="172" font-size="13" fill="#444" font-weight="600">55°</text>
+  <text x="232" y="172" font-size="13" fill="#444" font-weight="600">80°</text>
+  <text x="140" y="42" font-size="18" fill="#E8593C" font-weight="800">?</text>
+</svg>`,
+    options: ['45°', '55°', '65°', '135°'],
+    correct_answer: '45°',
+    hint: 'Vinklarna i en triangel summerar alltid till 180°.',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'GC5',
+    level: 'C',
+    subtopic: 'skala',
+    type: 'open',
+    question:
+      'På en karta är skalan 1:50 000.\n' +
+      'Två orter är 7 cm från varandra på kartan.\n' +
+      'Hur långt är det i verkligheten? Ange svaret i kilometer.',
+    figure_svg: null,
+    options: null,
+    correct_answer: '3,5 km',
+    hint: 'Multiplicera kartavståndet med skalans nämnare. Glöm inte att omvandla enheter.',
+    evaluation_criteria:
+      'Korrekt svar är 3,5 km (7 cm × 50 000 = 350 000 cm = 3 500 m = 3,5 km). ' +
+      'C-poäng kräver korrekt användning av skalan och fullständig enhetsomvandling. ' +
+      'Acceptera 3 500 m som likvärdigt svar. Eleven ska visa beräkningsstegen.',
+  },
+  {
+    id: 'GC6',
+    level: 'C',
+    subtopic: 'enhetsomvandling',
+    type: 'open',
+    question:
+      'En simbassäng är 25 m lång och 12,5 m bred.\n' +
+      'Vattendjupet är 1,8 m.\n\n' +
+      'a) Hur stor är bassängens bottenyta i kvadratmeter?\n' +
+      'b) Hur stor är botten i kvadratdecimeter?\n' +
+      'Visa hur du omvandlar.',
+    figure_svg: null,
+    options: null,
+    correct_answer: 'a) 312,5 m². b) 31 250 dm².',
+    hint: '1 m = 10 dm, alltså 1 m² = 100 dm². Multiplicera svaret från a med 100.',
+    evaluation_criteria:
+      'Del a: 25 × 12,5 = 312,5 m². Del b: 312,5 × 100 = 31 250 dm². ' +
+      'C-poäng kräver korrekt areaberäkning i del a och korrekt enhetsomvandling i del b. ' +
+      'Eleven ska förklara varför man multiplicerar med 100 när man går från m² till dm² ' +
+      '(sambandet 1 m = 10 dm → 1 m² = 10 × 10 dm²).',
+  },
+  {
+    id: 'GA5',
+    level: 'A',
+    subtopic: 'area_omkrets',
+    type: 'open',
+    question:
+      'En kvadrat och en rektangel har samma area.\n' +
+      'Kvadraten har sidan 6 cm.\n' +
+      'Rektangeln har en sida som är 4 cm.\n\n' +
+      'a) Hur lång är rektangelns andra sida?\n' +
+      'b) Vilket av de två figurerna har störst omkrets?\n' +
+      'c) Förklara varför det är möjligt att ha samma area men olika omkrets.',
+    figure_svg: null,
+    options: null,
+    correct_answer:
+      'a) 9 cm. b) Rektangeln: 2×(9+4)=26 cm > kvadraten: 4×6=24 cm. ' +
+      'c) Area beror på produkten av sidorna, omkrets på summan — de mäter olika saker.',
+    hint: 'Börja med kvadratens area. Sätt upp sambandet för rektangeln och lös ut den okända sidan.',
+    evaluation_criteria:
+      'Del a: 6² = 36 cm², 36 ÷ 4 = 9 cm — kräver uträkning. ' +
+      'Del b: korrekt beräkning av båda omkretsar. ' +
+      'Del c kräver A-nivå: eleven förklarar att area mäter ytan (produkt) och omkrets mäter ' +
+      'randen (summa), och att dessa är oberoende storheter. ' +
+      'Enbart korrekt svar på a och b utan förklaring i c ger C-poäng.',
+  },
 ];
