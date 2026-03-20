@@ -32,7 +32,7 @@ Efter varje slutförd modul eller större förändring:
   - 10 frågor: AE1–AE4, AC1–AC4, AA1–AA2 | subtopics: ekvation, mönster
   - A-nivå kräver generell formel för godtyckligt n — "enbart korrekt talföljd ger inte A-poäng"
 - [x] Taluppfattning & aritmetik (`taluppfattning-aritmetik`) — klar 2026-03-17
-  - 10 frågor: TE1–TE4, TC1–TC4, TA1–TA2 | subtopics: aritmetik, stora_tal, rimlighetsbedömning
+  - 15 frågor: TE1–TE6, TC1–TC6, TA1–TA3 | subtopics: aritmetik, stora_tal, rimlighetsbedömning
   - A-nivå betonar systematisk genomgång och metodförklaring
 
 Ny modul aktiveras i `src/data/moduler.js` (`implementerad: true`) och routas i `App.jsx`.

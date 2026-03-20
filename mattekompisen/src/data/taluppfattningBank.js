@@ -160,4 +160,97 @@ export const TALUPPFATTNING_BANK = [
       'Extra (välutvecklat): verifiera 2×30 + 15 = 75. ' +
       'Enbart korrekt svar utan ekvation och förklaring ger inte A-nivåpoäng.',
   },
+
+  // ─── UTÖKAD BANK TE5–TE6, TC5–TC6, TA3 ───────────────────────────────────
+  {
+    id: 'TE5',
+    level: 'E',
+    subtopic: 'aritmetik',
+    type: 'multiple_choice',
+    question: 'Beräkna: 48 × 25',
+    figure_svg: null,
+    options: ['1 200', '1 100', '1 250', '960'],
+    correct_answer: '1 200',
+    hint: 'Prova att tänka 48 × 25 = 48 × 100 ÷ 4.',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'TE6',
+    level: 'E',
+    subtopic: 'stora_tal',
+    type: 'multiple_choice',
+    question: 'Vilket av dessa tal är störst?',
+    figure_svg: null,
+    options: ['4 698 500', '4 750 000', '4 650 000', '4 709 999'],
+    correct_answer: '4 750 000',
+    hint: 'Jämför siffrorna position för position, börja med den högsta platsvärdet.',
+    evaluation_criteria: null,
+  },
+  {
+    id: 'TC5',
+    level: 'C',
+    subtopic: 'aritmetik',
+    type: 'open',
+    question:
+      'En buss har 48 sittplatser och gör 6 fullsatta turer på en dag.\n\n' +
+      'a) Hur många passagerare åker totalt?\n' +
+      'b) En annan dag ska 1 500 passagerare transporteras.\n' +
+      '   Hur många hela bussturer behövs minst?\n' +
+      'Visa dina beräkningar.',
+    figure_svg: null,
+    options: null,
+    correct_answer: 'a) 288 passagerare. b) 32 turer (1 500 ÷ 48 = 31,25 → avrundat uppåt till 32).',
+    hint: 'Del b: Division ger inte ett jämnt svar. Hur avrundar du för att alla ska få plats?',
+    evaluation_criteria:
+      'Del a: 48 × 6 = 288. ' +
+      'Del b: 1 500 ÷ 48 = 31,25 → eleven måste avrunda UPPÅT till 32 och förklara varför ' +
+      '(31 turer räcker inte — 31 × 48 = 1 488 < 1 500). ' +
+      'C-poäng kräver korrekt hantering av rest vid division och motivering av avrundningen.',
+  },
+  {
+    id: 'TC6',
+    level: 'C',
+    subtopic: 'rimlighetsbedömning',
+    type: 'open',
+    question:
+      'Erik säger att 18 × 32 ≈ 600.\n' +
+      'Anna säger att det är ungefär 540.\n\n' +
+      'Vem har gjort den rimligaste uppskattningen?\n' +
+      'Visa hur du bedömer rimligheten.',
+    figure_svg: null,
+    options: null,
+    correct_answer:
+      'Anna. Exakt svar: 576. Eriks 600 avviker mer (24) än Annas 540 (36) — ' +
+      'men ett resonemang om t.ex. 20 × 30 = 600 som överskattning är också godkänt.',
+    hint: 'Räkna det exakta svaret eller avrunda båda talen och jämför vem som hamnar närmast.',
+    evaluation_criteria:
+      'Exakt svar: 18 × 32 = 576. ' +
+      'Godkänt: eleven visar ett avrundningsresonemang (t.ex. 20 × 30 = 600 är en överskattning, ' +
+      'eller 18 × 30 = 540 är en underskattning) och drar slutsats om vem som är rimligast. ' +
+      'Acceptera båda svaren om resonemanget är korrekt och konsekvent — ' +
+      'det viktiga är att eleven motiverar rimligheten, inte bara anger ett namn.',
+  },
+  {
+    id: 'TA3',
+    level: 'A',
+    subtopic: 'aritmetik',
+    type: 'open',
+    question:
+      'Du vet att 144 ÷ 12 = 12.\n\n' +
+      'a) Vad är 144 ÷ 0,12? Förklara varför utan att räkna från grunden.\n' +
+      'b) Vad är 1 440 ÷ 12? Förklara varför utan att räkna från grunden.\n' +
+      'c) Formulera en generell regel: vad händer med kvoten när ' +
+      'nämnaren delas med 10, respektive när täljaren multipliceras med 10?',
+    figure_svg: null,
+    options: null,
+    correct_answer: 'a) 1 200. b) 120. c) Nämnaren ÷ 10 → kvoten × 10. Täljaren × 10 → kvoten × 10.',
+    hint: 'Tänk på vad som händer med bråket 144/12 om du krymper nämnaren — eller om du förstärker täljaren.',
+    evaluation_criteria:
+      'Korrekt svar: a) 1 200, b) 120. ' +
+      'A-poäng kräver att eleven förklarar SAMBANDEN utan att räkna från grunden: ' +
+      '(a) 0,12 = 12 ÷ 100, så kvoten multipliceras med 100 → 12 × 100 = 1 200. ' +
+      '(b) täljaren multipliceras med 10, så kvoten multipliceras med 10 → 12 × 10 = 120. ' +
+      'Del c kräver en formulerad GENERELL REGEL — inte bara de två specifika fallen. ' +
+      'Enbart korrekta svar utan förklaring av sambandet ger C-poäng.',
+  },
 ];
