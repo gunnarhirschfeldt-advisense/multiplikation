@@ -68,17 +68,17 @@ export const TALUPPFATTNING_BANK = [
     subtopic: 'aritmetik',
     type: 'open',
     question:
-      'En bil kör 8 liter per mil. En resa är 15 mil.\n' +
+      'En bil kör 0,8 liter per mil. En resa är 15 mil.\n' +
       'Bränslet kostar 20 kr per liter.\n\n' +
       'Hur mycket kostar bränslet för resan?\n' +
       'Visa dina beräkningar steg för steg.',
     figure_svg: null,
     options: null,
-    correct_answer: '2 400 kr.',
+    correct_answer: '240 kr.',
     hint: 'Räkna först ut hur mycket bränsle som behövs totalt.',
     evaluation_criteria:
-      'Eleven ska: (1) beräkna totalt bränsle: 8 × 15 = 120 liter, ' +
-      '(2) beräkna kostnad: 120 × 20 = 2 400 kr, ' +
+      'Eleven ska: (1) beräkna totalt bränsle: 0,8 × 15 = 12 liter, ' +
+      '(2) beräkna kostnad: 12 × 20 = 240 kr, ' +
       '(3) visa beräkningarna steg för steg. ' +
       'Delvisa poäng om rätt metod men räknefel.',
   },
